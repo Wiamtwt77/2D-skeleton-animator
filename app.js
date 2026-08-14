@@ -1,30 +1,184 @@
-// Initialization
-const canvas = document.getElementById('mainCanvas');
-const ctx = canvas.getContext('2d');
-const thumbStrip = document.getElementById('thumbStrip');
-const frameCountLabel = document.getElementById('frameCount');
-
-function resizeCanvas() {
-  canvas.width = canvas.parentElement.clientWidth;
-  canvas.height = canvas.parentElement.clientHeight;
-}
-window.addEventListener('resize', resizeCanvas);
-resizeCanvas();
-
-// Character Parts & Customization State
+// Global State for Character Customization
 const characterState = {
   headShape: 'circle',
   eyeStyle: 'happy',
   armStyle: 'smooth',
+  legStyle: 'standard',
   primaryColor: '#38bdf8',
   jointColor: '#22c55e'
 };
 
-// Physics Rig Setup
-const upperArmLength = 110;
-const forearmLength = 95;
-const spineBase = { x: 0, y: 120 };
-let target = { x: 120, y: -20 };
+// UI Elements & Navigation
+const builderScreen = document.getElementById('builderScreen');
+const animatorScreen = document.getElementById('animatorScreen');
+const step1Indicator = document.getElementById('step1Indicator');
+const step2Indicator = document.getElementById('step2Indicator');
+
+const goToAnimBtn = document.getElementById('goToAnimBtn');
+const backToBuilderBtn = document.getElementById('backToBuilderBtn');
+
+// Canvases Initialization
+const builderCanvas = document.getElementById('builderCanvas');
+const bCtx = builderCanvas.getContext('2d');
+
+const mainCanvas = document.getElementById('mainCanvas');
+const ctx = mainCanvas.getContext('2d');
+
+const thumbStrip = document.getElementById('thumbStrip');
+const frameCountLabel = document.getElementById('frameCount');
+
+function resizeCanvases() {
+  builderCanvas.width = builderCanvas.parentElement.clientWidth;
+  builderCanvas.height = builderCanvas.parentElement.clientHeight;
+
+  mainCanvas.width = mainCanvas.parentElement.clientWidth;
+  mainCanvas.height = mainCanvas.parentElement.clientHeight;
+}
+window.addEventListener('resize', () => {
+  resizeCanvases();
+  drawBuilderPreview();
+});
+
+// Switch Screen Handler
+goToAnimBtn.addEventListener('click', () => {
+  builderScreen.classList.remove('active');
+  animatorScreen.classList.add('active');
+  step1Indicator.classList.remove('active');
+  step2Indicator.classList.add('active');
+  resizeCanvases();
+});
+
+backToBuilderBtn.addEventListener('click', () => {
+  animatorScreen.classList.remove('active');
+  builderScreen.classList.add('active');
+  step2Indicator.classList.remove('active');
+  step1Indicator.classList.add('active');
+  resizeCanvases();
+  drawBuilderPreview();
+});
+
+// Customization Event Listeners
+document.getElementById('headShape').addEventListener('change', (e) => { characterState.headShape = e.target.value; drawBuilderPreview(); });
+document.getElementById('eyeStyle').addEventListener('change', (e) => { characterState.eyeStyle = e.target.value; drawBuilderPreview(); });
+document.getElementById('armStyle').addEventListener('change', (e) => { characterState.armStyle = e.target.value; drawBuilderPreview(); });
+document.getElementById('legStyle').addEventListener('change', (e) => { characterState.legStyle = e.target.value; drawBuilderPreview(); });
+document.getElementById('primaryColor').addEventListener('input', (e) => { characterState.primaryColor = e.target.value; drawBuilderPreview(); });
+document.getElementById('jointColor').addEventListener('input', (e) => { characterState.jointColor = e.target.value; drawBuilderPreview(); });
+
+// Shared Skeleton Rendering Engine
+function drawCharacterParts(targetCtx, base, shoulder, pose, torsoAngleVal) {
+  targetCtx.lineCap = 'round';
+  targetCtx.lineJoin = 'round';
+
+  // 1. Legs Rendering
+  targetCtx.strokeStyle = characterState.primaryColor;
+  targetCtx.lineWidth = characterState.armStyle === 'stick' ? 4 : 8;
+
+  const leftFoot = { x: base.x - 25, y: base.y + 70 };
+  const rightFoot = { x: base.x + 25, y: base.y + 70 };
+
+  // Left Leg
+  targetCtx.beginPath(); targetCtx.moveTo(base.x - 8, base.y); targetCtx.lineTo(leftFoot.x, leftFoot.y); targetCtx.stroke();
+  // Right Leg
+  targetCtx.beginPath(); targetCtx.moveTo(base.x + 8, base.y); targetCtx.lineTo(rightFoot.x, rightFoot.y); targetCtx.stroke();
+
+  // Shoes / Boots
+  if (characterState.legStyle === 'standard') {
+    targetCtx.fillStyle = characterState.jointColor;
+    targetCtx.beginPath(); targetCtx.arc(leftFoot.x - 4, leftFoot.y, 6, 0, Math.PI * 2); targetCtx.fill();
+    targetCtx.beginPath(); targetCtx.arc(rightFoot.x + 4, rightFoot.y, 6, 0, Math.PI * 2); targetCtx.fill();
+  }
+
+  // 2. Torso
+  targetCtx.strokeStyle = '#f8fafc';
+  targetCtx.lineWidth = characterState.armStyle === 'stick' ? 4 : 12;
+  targetCtx.beginPath();
+  targetCtx.moveTo(base.x, base.y);
+  targetCtx.lineTo(shoulder.x, shoulder.y);
+  targetCtx.stroke();
+
+  // 3. Head & Face
+  const headPos = {
+    x: shoulder.x + Math.sin(torsoAngleVal * 0.5) * 35,
+    y: shoulder.y - Math.cos(torsoAngleVal * 0.5) * 35 - 15
+  };
+
+  targetCtx.fillStyle = characterState.primaryColor;
+  targetCtx.strokeStyle = '#ffffff';
+  targetCtx.lineWidth = 2;
+
+  if (characterState.headShape === 'circle') {
+    targetCtx.beginPath(); targetCtx.arc(headPos.x, headPos.y, 22, 0, Math.PI * 2); targetCtx.fill(); targetCtx.stroke();
+  } else if (characterState.headShape === 'square') {
+    targetCtx.beginPath(); targetCtx.roundRect(headPos.x - 20, headPos.y - 20, 40, 40, 8); targetCtx.fill(); targetCtx.stroke();
+  } else if (characterState.headShape === 'cat') {
+    targetCtx.beginPath(); targetCtx.arc(headPos.x, headPos.y, 20, 0, Math.PI * 2); targetCtx.fill(); targetCtx.stroke();
+    targetCtx.beginPath();
+    targetCtx.moveTo(headPos.x - 15, headPos.y - 12); targetCtx.lineTo(headPos.x - 22, headPos.y - 30); targetCtx.lineTo(headPos.x - 5, headPos.y - 18);
+    targetCtx.moveTo(headPos.x + 15, headPos.y - 12); targetCtx.lineTo(headPos.x + 22, headPos.y - 30); targetCtx.lineTo(headPos.x + 5, headPos.y - 18);
+    targetCtx.fill(); targetCtx.stroke();
+  } else if (characterState.headShape === 'robot') {
+    targetCtx.beginPath(); targetCtx.rect(headPos.x - 22, headPos.y - 18, 44, 36); targetCtx.fill(); targetCtx.stroke();
+    targetCtx.fillRect(headPos.x - 4, headPos.y - 26, 8, 8);
+  }
+
+  // Eye Details
+  targetCtx.fillStyle = '#0f172a';
+  targetCtx.strokeStyle = '#0f172a';
+  targetCtx.lineWidth = 2;
+  const eyeOffset = 8;
+
+  if (characterState.eyeStyle === 'normal') {
+    targetCtx.beginPath(); targetCtx.arc(headPos.x - eyeOffset, headPos.y - 2, 3, 0, Math.PI * 2); targetCtx.fill();
+    targetCtx.beginPath(); targetCtx.arc(headPos.x + eyeOffset, headPos.y - 2, 3, 0, Math.PI * 2); targetCtx.fill();
+  } else if (characterState.eyeStyle === 'happy') {
+    targetCtx.beginPath(); targetCtx.arc(headPos.x - eyeOffset, headPos.y, 4, Math.PI, 0); targetCtx.stroke();
+    targetCtx.beginPath(); targetCtx.arc(headPos.x + eyeOffset, headPos.y, 4, Math.PI, 0); targetCtx.stroke();
+  } else if (characterState.eyeStyle === 'surprised') {
+    targetCtx.beginPath(); targetCtx.arc(headPos.x - eyeOffset, headPos.y, 5, 0, Math.PI * 2); targetCtx.stroke();
+    targetCtx.beginPath(); targetCtx.arc(headPos.x + eyeOffset, headPos.y, 5, 0, Math.PI * 2); targetCtx.stroke();
+  } else if (characterState.eyeStyle === 'blink') {
+    targetCtx.beginPath(); targetCtx.moveTo(headPos.x - eyeOffset - 3, headPos.y); targetCtx.lineTo(headPos.x - eyeOffset + 3, headPos.y); targetCtx.stroke();
+    targetCtx.beginPath(); targetCtx.moveTo(headPos.x + eyeOffset - 3, headPos.y); targetCtx.lineTo(headPos.x + eyeOffset + 3, headPos.y); targetCtx.stroke();
+  }
+
+  // 4. Arms (IK Pose)
+  targetCtx.strokeStyle = characterState.primaryColor;
+  targetCtx.lineWidth = characterState.armStyle === 'stick' ? 4 : (characterState.armStyle === 'segmented' ? 12 : 8);
+
+  targetCtx.beginPath(); targetCtx.moveTo(shoulder.x, shoulder.y); targetCtx.lineTo(pose.elbow.x, pose.elbow.y); targetCtx.stroke();
+  targetCtx.beginPath(); targetCtx.moveTo(pose.elbow.x, pose.elbow.y); targetCtx.lineTo(pose.wrist.x, pose.wrist.y); targetCtx.stroke();
+
+  // Joints
+  [shoulder, pose.elbow, pose.wrist].forEach((joint, idx) => {
+    targetCtx.fillStyle = idx === 2 ? characterState.jointColor : '#ffffff';
+    targetCtx.beginPath(); targetCtx.arc(joint.x, joint.y, characterState.armStyle === 'stick' ? 4 : 7, 0, Math.PI * 2); targetCtx.fill();
+  });
+}
+
+// Draw Builder Preview (Static T-Pose / Relaxed)
+function drawBuilderPreview() {
+  if (!builderCanvas.width) return;
+  bCtx.clearRect(0, 0, builderCanvas.width, builderCanvas.height);
+
+  const centerX = builderCanvas.width / 2;
+  const centerY = builderCanvas.height / 2;
+
+  const base = { x: centerX, y: centerY + 20 };
+  const shoulder = { x: centerX, y: centerY - 80 };
+  const pose = {
+    elbow: { x: centerX + 60, y: centerY - 50 },
+    wrist: { x: centerX + 110, y: centerY - 20 }
+  };
+
+  drawCharacterParts(bCtx, base, shoulder, pose, 0);
+}
+
+// IK Solver Engine for Animation Workspace
+const upperArmLength = 100;
+const forearmLength = 85;
+const spineBase = { x: 0, y: 80 };
+let target = { x: 100, y: -20 };
 let isDragging = false;
 
 let torsoAngle = 0;
@@ -33,14 +187,8 @@ let torsoInfluence = 0.25;
 let springStiffness = 0.12;
 
 let keyframes = [];
-let motionHistory = [];
 let time = 0;
 
-// Recording State
-let mediaRecorder;
-let recordedChunks = [];
-
-// IK Engine
 function solveIK(shoulder, target, l1, l2) {
   const dx = target.x - shoulder.x;
   const dy = target.y - shoulder.y;
@@ -59,160 +207,79 @@ function solveIK(shoulder, target, l1, l2) {
 
   const shoulderAngle = angleToTarget - shoulderAngleOffset;
 
-  const elbow = {
-    x: shoulder.x + Math.cos(shoulderAngle) * l1,
-    y: shoulder.y + Math.sin(shoulderAngle) * l1
+  return {
+    shoulder,
+    elbow: { x: shoulder.x + Math.cos(shoulderAngle) * l1, y: shoulder.y + Math.sin(shoulderAngle) * l1 },
+    wrist: { x: shoulder.x + Math.cos(shoulderAngle) * l1 + Math.cos(shoulderAngle + elbowAngle) * l2, y: shoulder.y + Math.sin(shoulderAngle) * l1 + Math.sin(shoulderAngle + elbowAngle) * l2 }
   };
-
-  const wrist = {
-    x: elbow.x + Math.cos(shoulderAngle + elbowAngle) * l2,
-    y: elbow.y + Math.sin(shoulderAngle + elbowAngle) * l2
-  };
-
-  return { shoulder, elbow, wrist };
 }
 
-// Main Render Loop
+// Animation Workspace Loop
 function animate() {
   time += 0.04;
-  const centerX = canvas.width / 2;
-  const centerY = canvas.height / 2 + 50;
+  if (animatorScreen.classList.contains('active')) {
+    const centerX = mainCanvas.width / 2;
+    const centerY = mainCanvas.height / 2 + 20;
 
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.clearRect(0, 0, mainCanvas.width, mainCanvas.height);
 
-  // Breathing Idle Motion
-  const idleY = Math.sin(time * 2) * 3;
-  const currentSpineBase = { x: centerX + spineBase.x, y: centerY + spineBase.y + idleY };
+    const idleY = Math.sin(time * 2) * 3;
+    const currentSpineBase = { x: centerX + spineBase.x, y: centerY + spineBase.y + idleY };
 
-  // Torso Physics Balance
-  const dx = (target.x + centerX) - currentSpineBase.x;
-  const dy = (target.y + centerY) - currentSpineBase.y;
-  const targetDist = Math.hypot(dx, dy);
+    // Torso IK Balance
+    const dx = (target.x + centerX) - currentSpineBase.x;
+    const dy = (target.y + centerY) - currentSpineBase.y;
+    const targetDist = Math.hypot(dx, dy);
 
-  targetTorsoAngle = Math.atan2(dy, dx) * torsoInfluence * (targetDist / 250);
-  torsoAngle += (targetTorsoAngle - torsoAngle) * springStiffness;
+    targetTorsoAngle = Math.atan2(dy, dx) * torsoInfluence * (targetDist / 250);
+    torsoAngle += (targetTorsoAngle - torsoAngle) * springStiffness;
 
-  // Shoulder Position
-  const torsoLength = 100;
-  const shoulder = {
-    x: currentSpineBase.x + Math.sin(torsoAngle) * torsoLength,
-    y: currentSpineBase.y - Math.cos(torsoAngle) * torsoLength
-  };
+    const torsoLength = 90;
+    const shoulder = {
+      x: currentSpineBase.x + Math.sin(torsoAngle) * torsoLength,
+      y: currentSpineBase.y - Math.cos(torsoAngle) * torsoLength
+    };
 
-  // Solve Pose
-  const worldTarget = { x: centerX + target.x, y: centerY + target.y };
-  const pose = solveIK(shoulder, worldTarget, upperArmLength, forearmLength);
+    const worldTarget = { x: centerX + target.x, y: centerY + target.y };
+    const pose = solveIK(shoulder, worldTarget, upperArmLength, forearmLength);
 
-  // Draw Scene
-  drawGrid();
-  drawSkeleton(currentSpineBase, shoulder, pose);
-  drawTarget(worldTarget);
+    // Grid & Character
+    drawGrid(ctx, mainCanvas);
+    drawCharacterParts(ctx, currentSpineBase, shoulder, pose, torsoAngle);
+    drawTargetHandle(ctx, worldTarget);
+  }
 
   requestAnimationFrame(animate);
 }
 
-// Draw Grid Background
-function drawGrid() {
-  ctx.strokeStyle = '#1e293b';
-  ctx.lineWidth = 1;
-  for (let x = 0; x < canvas.width; x += 40) {
-    ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, canvas.height); ctx.stroke();
+function drawGrid(targetCtx, c) {
+  targetCtx.strokeStyle = '#1e293b';
+  targetCtx.lineWidth = 1;
+  for (let x = 0; x < c.width; x += 40) {
+    targetCtx.beginPath(); targetCtx.moveTo(x, 0); targetCtx.lineTo(x, c.height); targetCtx.stroke();
   }
-  for (let y = 0; y < canvas.height; y += 40) {
-    ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(canvas.width, y); ctx.stroke();
+  for (let y = 0; y < c.height; y += 40) {
+    targetCtx.beginPath(); targetCtx.moveTo(0, y); targetCtx.lineTo(c.width, y); targetCtx.stroke();
   }
 }
 
-// Modular Character Drawing Engine
-function drawSkeleton(base, shoulder, pose) {
-  ctx.lineCap = 'round';
-  ctx.lineJoin = 'round';
-
-  // Torso
-  ctx.strokeStyle = '#f8fafc';
-  ctx.lineWidth = characterState.armStyle === 'stick' ? 4 : 12;
-  ctx.beginPath();
-  ctx.moveTo(base.x, base.y);
-  ctx.lineTo(shoulder.x, shoulder.y);
-  ctx.stroke();
-
-  // Head Customization
-  const headPos = {
-    x: shoulder.x + Math.sin(torsoAngle * 0.5) * 35,
-    y: shoulder.y - Math.cos(torsoAngle * 0.5) * 35 - 15
-  };
-
-  ctx.fillStyle = characterState.primaryColor;
-  ctx.strokeStyle = '#ffffff';
-  ctx.lineWidth = 2;
-
-  if (characterState.headShape === 'circle') {
-    ctx.beginPath(); ctx.arc(headPos.x, headPos.y, 22, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
-  } else if (characterState.headShape === 'square') {
-    ctx.beginPath(); ctx.roundRect(headPos.x - 20, headPos.y - 20, 40, 40, 8); ctx.fill(); ctx.stroke();
-  } else if (characterState.headShape === 'cat') {
-    ctx.beginPath(); ctx.arc(headPos.x, headPos.y, 20, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
-    // Ears
-    ctx.beginPath();
-    ctx.moveTo(headPos.x - 15, headPos.y - 12); ctx.lineTo(headPos.x - 22, headPos.y - 30); ctx.lineTo(headPos.x - 5, headPos.y - 18);
-    ctx.moveTo(headPos.x + 15, headPos.y - 12); ctx.lineTo(headPos.x + 22, headPos.y - 30); ctx.lineTo(headPos.x + 5, headPos.y - 18);
-    ctx.fill(); ctx.stroke();
-  } else if (characterState.headShape === 'robot') {
-    ctx.beginPath(); ctx.rect(headPos.x - 22, headPos.y - 18, 44, 36); ctx.fill(); ctx.stroke();
-    ctx.fillRect(headPos.x - 4, headPos.y - 26, 8, 8); // Antenna
-  }
-
-  // Eyes Customization
-  ctx.fillStyle = '#0f172a';
-  ctx.strokeStyle = '#0f172a';
-  ctx.lineWidth = 2;
-  const eyeOffset = 8;
-
-  if (characterState.eyeStyle === 'normal') {
-    ctx.beginPath(); ctx.arc(headPos.x - eyeOffset, headPos.y - 2, 3, 0, Math.PI * 2); ctx.fill();
-    ctx.beginPath(); ctx.arc(headPos.x + eyeOffset, headPos.y - 2, 3, 0, Math.PI * 2); ctx.fill();
-  } else if (characterState.eyeStyle === 'happy') {
-    ctx.beginPath(); ctx.arc(headPos.x - eyeOffset, headPos.y, 4, Math.PI, 0); ctx.stroke();
-    ctx.beginPath(); ctx.arc(headPos.x + eyeOffset, headPos.y, 4, Math.PI, 0); ctx.stroke();
-  } else if (characterState.eyeStyle === 'surprised') {
-    ctx.beginPath(); ctx.arc(headPos.x - eyeOffset, headPos.y, 5, 0, Math.PI * 2); ctx.stroke();
-    ctx.beginPath(); ctx.arc(headPos.x + eyeOffset, headPos.y, 5, 0, Math.PI * 2); ctx.stroke();
-  } else if (characterState.eyeStyle === 'blink') {
-    ctx.beginPath(); ctx.moveTo(headPos.x - eyeOffset - 3, headPos.y); ctx.lineTo(headPos.x - eyeOffset + 3, headPos.y); ctx.stroke();
-    ctx.beginPath(); ctx.moveTo(headPos.x + eyeOffset - 3, headPos.y); ctx.lineTo(headPos.x + eyeOffset + 3, headPos.y); ctx.stroke();
-  }
-
-  // Arm Customization
-  ctx.strokeStyle = characterState.primaryColor;
-  ctx.lineWidth = characterState.armStyle === 'stick' ? 4 : (characterState.armStyle === 'segmented' ? 12 : 8);
-
-  ctx.beginPath(); ctx.moveTo(shoulder.x, shoulder.y); ctx.lineTo(pose.elbow.x, pose.elbow.y); ctx.stroke();
-  ctx.beginPath(); ctx.moveTo(pose.elbow.x, pose.elbow.y); ctx.lineTo(pose.wrist.x, pose.wrist.y); ctx.stroke();
-
-  // Joints
-  [shoulder, pose.elbow, pose.wrist].forEach((joint, idx) => {
-    ctx.fillStyle = idx === 2 ? characterState.jointColor : '#ffffff';
-    ctx.beginPath(); ctx.arc(joint.x, joint.y, characterState.armStyle === 'stick' ? 4 : 7, 0, Math.PI * 2); ctx.fill();
-  });
+function drawTargetHandle(targetCtx, worldTarget) {
+  targetCtx.strokeStyle = isDragging ? '#4ade80' : characterState.jointColor;
+  targetCtx.lineWidth = 2;
+  targetCtx.fillStyle = 'rgba(34, 197, 94, 0.2)';
+  targetCtx.beginPath(); targetCtx.arc(worldTarget.x, worldTarget.y, 14, 0, Math.PI * 2); targetCtx.fill(); targetCtx.stroke();
 }
 
-function drawTarget(worldTarget) {
-  ctx.strokeStyle = isDragging ? '#4ade80' : characterState.jointColor;
-  ctx.lineWidth = 2;
-  ctx.fillStyle = 'rgba(34, 197, 94, 0.2)';
-  ctx.beginPath(); ctx.arc(worldTarget.x, worldTarget.y, 14, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
-}
-
-// Interaction Listeners
+// Drag Interaction
 function getMousePos(e) {
-  const rect = canvas.getBoundingClientRect();
+  const rect = mainCanvas.getBoundingClientRect();
   return {
-    x: e.clientX - rect.left - (canvas.width / 2),
-    y: e.clientY - rect.top - (canvas.height / 2 + 50)
+    x: e.clientX - rect.left - (mainCanvas.width / 2),
+    y: e.clientY - rect.top - (mainCanvas.height / 2 + 20)
   };
 }
 
-canvas.addEventListener('mousedown', (e) => {
+mainCanvas.addEventListener('mousedown', (e) => {
   const m = getMousePos(e);
   if (Math.hypot(m.x - target.x, m.y - target.y) < 25) isDragging = true;
 });
@@ -226,13 +293,7 @@ window.addEventListener('mousemove', (e) => {
 });
 window.addEventListener('mouseup', () => isDragging = false);
 
-// Customization UI Event Listeners
-document.getElementById('headShape').addEventListener('change', (e) => characterState.headShape = e.target.value);
-document.getElementById('eyeStyle').addEventListener('change', (e) => characterState.eyeStyle = e.target.value);
-document.getElementById('armStyle').addEventListener('change', (e) => characterState.armStyle = e.target.value);
-document.getElementById('primaryColor').addEventListener('input', (e) => characterState.primaryColor = e.target.value);
-document.getElementById('jointColor').addEventListener('input', (e) => characterState.jointColor = e.target.value);
-
+// Physics Controls
 document.getElementById('torsoWeight').addEventListener('input', (e) => {
   torsoInfluence = parseFloat(e.target.value);
   document.getElementById('torsoVal').innerText = Math.round(torsoInfluence * 100) + '%';
@@ -243,26 +304,25 @@ document.getElementById('springStiffness').addEventListener('input', (e) => {
   document.getElementById('springVal').innerText = e.target.value;
 });
 
-// Video Recorder Logic (Canvas Export)
+// Canvas Video Recording Setup
+let mediaRecorder;
+let recordedChunks = [];
 const startRecBtn = document.getElementById('startRecBtn');
 const stopRecBtn = document.getElementById('stopRecBtn');
 const recBadge = document.getElementById('recBadge');
 
 startRecBtn.addEventListener('click', () => {
-  const stream = canvas.captureStream(30); // 30 FPS
+  const stream = mainCanvas.captureStream(30);
   recordedChunks = [];
   mediaRecorder = new MediaRecorder(stream, { mimeType: 'video/webm' });
 
-  mediaRecorder.ondataavailable = (e) => {
-    if (e.data.size > 0) recordedChunks.push(e.data);
-  };
-
+  mediaRecorder.ondataavailable = (e) => { if (e.data.size > 0) recordedChunks.push(e.data); };
   mediaRecorder.onstop = () => {
     const blob = new Blob(recordedChunks, { type: 'video/webm' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `character_animation_${Date.now()}.webm`;
+    a.download = `youtube_character_anim_${Date.now()}.webm`;
     a.click();
     URL.revokeObjectURL(url);
   };
@@ -282,7 +342,7 @@ stopRecBtn.addEventListener('click', () => {
   }
 });
 
-// Storyboard & Keyframe Timeline System
+// Keyframe Timeline Engine
 document.getElementById('addFrameBtn').addEventListener('click', () => {
   const frameData = { ...target };
   keyframes.push(frameData);
@@ -294,11 +354,9 @@ document.getElementById('addFrameBtn').addEventListener('click', () => {
 
   tCtx.fillStyle = '#0f172a';
   tCtx.fillRect(0, 0, 90, 65);
-  
-  // Render mini target
   tCtx.fillStyle = characterState.jointColor;
   tCtx.beginPath();
-  tCtx.arc(45 + frameData.x * 0.2, 35 + frameData.y * 0.2, 4, 0, Math.PI * 2);
+  tCtx.arc(45 + frameData.x * 0.2, 32 + frameData.y * 0.2, 4, 0, Math.PI * 2);
   tCtx.fill();
 
   const card = document.createElement('div');
@@ -349,8 +407,10 @@ document.getElementById('resetBtn').addEventListener('click', () => {
   keyframes = [];
   thumbStrip.innerHTML = '';
   frameCountLabel.innerText = 'عدد المشاهد: 0';
-  target = { x: 120, y: -20 };
+  target = { x: 100, y: -20 };
 });
 
-// Start Animation Engine
+// Initialization
+resizeCanvases();
+drawBuilderPreview();
 animate();
