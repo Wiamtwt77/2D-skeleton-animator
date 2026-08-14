@@ -5,7 +5,58 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>تصميم الشخصية</title>
   <link rel="stylesheet" href="style.css">
+</head><!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>صانع الشخصيات - اختيار الأشكال</title>
+  <link rel="stylesheet" href="style.css">
 </head>
+<body>
+
+  <div class="app-container">
+    <!-- شريط الأدوات الجانبي -->
+    <aside class="toolbar">
+      <h2>أدوات التصميم</h2>
+
+      <!-- اختيار الشكل -->
+      <div class="section">
+        <h3>1. اختر الشكل:</h3>
+        <div class="shape-buttons">
+          <button class="shape-btn active" data-shape="circle">دائرة</button>
+          <button class="shape-btn" data-shape="rect">مربع / مستطيل</button>
+          <button class="shape-btn" data-shape="triangle">مثلث</button>
+          <button class="shape-btn" data-shape="star">نجمة</button>
+        </div>
+      </div>
+
+      <!-- اختيار اللون -->
+      <div class="section">
+        <h3>2. اختر اللون:</h3>
+        <input type="color" id="shapeColor" value="#38bdf8">
+      </div>
+
+      <!-- أزرار التحكم -->
+      <div class="section actions">
+        <button id="undoBtn" class="action-btn">تراجع (Ctrl+Z)</button>
+        <button id="clearBtn" class="action-btn danger">مسح الكل</button>
+      </div>
+
+      <div class="instructions">
+        <p>💡 <strong>طريقة الاستخدام:</strong> اختر شكلاً ولوناً، ثم انقر ويسحب الماوس على مساحة الرسم لإنشاء الشكل بالمقاس والمكان الذي تريده.</p>
+      </div>
+    </aside>
+
+    <!-- منطقة الكانفاس -->
+    <main class="canvas-container">
+      <canvas id="builderCanvas"></canvas>
+    </main>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
 <body>
 
   <div class="app-container">
