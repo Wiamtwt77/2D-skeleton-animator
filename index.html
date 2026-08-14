@@ -3,152 +3,54 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>استوديو تصميم وتحريك الشخصيات</title>
+  <title>تصميم الشخصية</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-  <!-- Header / Navigation Bar -->
-  <header>
-    <h1>استوديو التحريك ثنائي الأبعاد</h1>
-    <div class="steps-nav">
-      <span id="step1Indicator" class="step-badge active">1. تصميم الشخصية</span>
-      <span class="step-arrow">➔</span>
-      <span id="step2Indicator" class="step-badge">2. التحريك والتسجيل</span>
-    </div>
-    <div class="status-bar">
-      <span id="recBadge" class="badge badge-rec" style="display: none;">🔴 جاري التسجيل...</span>
-    </div>
-  </header>
+  <div class="app-container">
+    <!-- لوحة التحكم الجانبية -->
+    <aside class="sidebar">
+      <h2>تصميم الشخصية</h2>
 
-  <!-- ==================== SCREEN 1: CHARACTER BUILDER ==================== -->
-  <div id="builderScreen" class="screen active">
-    
-    <div class="controls-panel">
-      <div class="panel-section">
-        <h3>🎨 تصميم أجزاء الشخصية</h3>
-        
-        <div class="control-group">
-          <label>شكل الرأس:</label>
-          <select id="headShape">
-            <option value="circle">دائري كلاسيكي</option>
-            <option value="square">مربع منحني</option>
-            <option value="cat">أذنان لطيفان</option>
-            <option value="robot">روبوت مستقبل</option>
-          </select>
-        </div>
-
-        <div class="control-group">
-          <label>تعبير العيون:</label>
-          <select id="eyeStyle">
-            <option value="happy">سعيد (^ ^)</option>
-            <option value="normal">عادي (• •)</option>
-            <option value="surprised">متفاجئ (⊙ ⊙)</option>
-            <option value="blink">مغمض (- -)</option>
-          </select>
-        </div>
-
-        <div class="control-group">
-          <label>نمط الأذرع والجذع:</label>
-          <select id="armStyle">
-            <option value="smooth">أنبوبي ناعم</option>
-            <option value="segmented">مفاصل هندسية</option>
-            <option value="stick">ستيك مان رفيع</option>
-          </select>
-        </div>
-
-        <div class="control-group">
-          <label>نمط الأرجل والأقدام:</label>
-          <select id="legStyle">
-            <option value="standard">قياسي مع حذاء</option>
-            <option value="stick">خطوط بسيطة</option>
-          </select>
-        </div>
-
-        <div class="control-group dual">
-          <div>
-            <label>لون الشخصية الأساسي:</label>
-            <input type="color" id="primaryColor" value="#38bdf8">
-          </div>
-          <div>
-            <label>لون المفصل والهدف:</label>
-            <input type="color" id="jointColor" value="#22c55e">
-          </div>
-        </div>
+      <!-- شكل الرأس -->
+      <div class="control-group">
+        <label for="headShape">شكل الرأس:</label>
+        <select id="headShape">
+          <option value="circle">دائري</option>
+          <option value="square">مربع</option>
+          <option value="cat">قطة</option>
+          <option value="robot">روبوت</option>
+        </select>
       </div>
 
-      <button class="btn btn-primary-action" id="goToAnimBtn">
-        حفظ الشخصية والانتقال للتحريك ➔
-      </button>
-    </div>
-
-    <!-- Preview Viewport -->
-    <div class="viewport">
-      <div class="hint">معاينة ثابتة للشخصية | اختر المكونات ثم انتقل لاستوديو التحريك</div>
-      <canvas id="builderCanvas"></canvas>
-    </div>
-
-  </div>
-
-  <!-- ==================== SCREEN 2: ANIMATION & RECORDING ==================== -->
-  <div id="animatorScreen" class="screen">
-    
-    <div class="controls-panel">
-      
-      <!-- Action Back -->
-      <button class="btn btn-secondary" id="backToBuilderBtn">
-        ⬅️ العودة لتعديل تصميم الشخصية
-      </button>
-
-      <!-- Physics Section -->
-      <div class="panel-section">
-        <h3>⚡ فيزياء الحركة الذكية</h3>
-        <div class="control-group">
-          <label>تأثر الجذع مع الذراع: <span id="torsoVal">25%</span></label>
-          <input type="range" id="torsoWeight" min="0" max="0.6" step="0.05" value="0.25">
-        </div>
-        <div class="control-group">
-          <label>مرونة الارتداد (Springs): <span id="springVal">12</span></label>
-          <input type="range" id="springStiffness" min="5" max="25" step="1" value="12">
-        </div>
+      <!-- شكل العينين -->
+      <div class="control-group">
+        <label for="eyeStyle">شكل العينين:</label>
+        <select id="eyeStyle">
+          <option value="happy">سعيد</option>
+          <option value="normal">عادي</option>
+          <option value="surprised">مندهش</option>
+        </select>
       </div>
 
-      <!-- Recording Section -->
-      <div class="panel-section">
-        <h3>🎥 تصوير الفيديو لليوتيوب</h3>
-        <div class="btn-group">
-          <button class="btn btn-record" id="startRecBtn">⏺️ بدء التسجيل</button>
-          <button class="btn btn-stop" id="stopRecBtn" disabled>⏹️ حفظ الفيديو</button>
-        </div>
+      <!-- لون الجسم -->
+      <div class="control-group">
+        <label for="primaryColor">لون الشخصية:</label>
+        <input type="color" id="primaryColor" value="#38bdf8">
       </div>
 
-      <!-- Timeline Controls -->
-      <div class="panel-section">
-        <h3>🎬 إدارة المشاهد</h3>
-        <button class="btn" id="addFrameBtn">➕ إضافة مشهد للمصغرات</button>
-        <button class="btn btn-secondary" id="playSeqBtn">▶️ تشغيل العرض التتابعي</button>
-        <button class="btn btn-danger" id="resetBtn">🔄 مسح المشاهد</button>
+      <!-- لون المفاصل -->
+      <div class="control-group">
+        <label for="jointColor">لون المفاصل:</label>
+        <input type="color" id="jointColor" value="#22c55e">
       </div>
+    </aside>
 
-    </div>
-
-    <!-- Interactive Workspace Viewport -->
-    <div class="viewport-container">
-      <div class="viewport">
-        <div class="hint">حرك الدائرة الخضراء بسحب الماوس لتحريك الشخصية وتغيير وضعيتها</div>
-        <canvas id="mainCanvas"></canvas>
-      </div>
-
-      <!-- Bottom Timeline (Thumbnails Bar) -->
-      <div class="timeline-container">
-        <div class="timeline-header">
-          <span>شريط المشاهد المصغرة (Storyboard Timeline)</span>
-          <span id="frameCount">عدد المشاهد: 0</span>
-        </div>
-        <div class="thumbnails-strip" id="thumbStrip"></div>
-      </div>
-    </div>
-
+    <!-- منطقة عرض الشخصية -->
+    <main class="canvas-container">
+      <canvas id="characterCanvas"></canvas>
+    </main>
   </div>
 
   <script src="script.js"></script>
