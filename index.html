@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>2D Skeletal Animator MVP</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="app-container">
+    <!-- الشريط العلوي -->
+    <header class="toolbar">
+      <h2>محرر التحريك ثنائي الأبعاد <span>MVP</span></h2>
+      <div class="actions">
+        <button id="btn-save">حفظ المشروع (JSON)</button>
+        <button id="btn-load">تحميل مشروع</button>
+        <input type="file" id="file-input" accept=".json" style="display: none;">
+      </div>
+    </header>
+
+    <!-- منطقة العمل (Canvas) -->
+    <main class="workspace">
+      <canvas id="stage" width="900" height="550"></canvas>
+      <div class="sidebar">
+        <h3>بيانات العظمة المختارة</h3>
+        <div id="bone-info">
+          <p>اختر عظمة من الشاشة لتحريكها بالماوس</p>
+        </div>
+      </div>
+    </main>
+
+    <!-- الـ Timeline والأدوات -->
+    <footer class="timeline-container">
+      <div class="controls">
+        <button id="btn-play">▶ تشغيل</button>
+        <button id="btn-add-keyframe">+ إضافة Keyframe</button>
+        <label>
+          السرعة (FPS):
+          <input type="number" id="input-fps" value="30" min="1" max="60">
+        </label>
+        <span id="frame-counter">Frame: 1 / 30</span>
+      </div>
+
+      <div class="timeline-slider">
+        <input type="range" id="timeline-scrubber" min="1" max="30" value="1">
+        <div class="keyframes-track" id="keyframes-track"></div>
+      </div>
+    </footer>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
