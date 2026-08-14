@@ -27,25 +27,57 @@ const ctx = mainCanvas.getContext('2d');
 const thumbStrip = document.getElementById('thumbStrip');
 const frameCountLabel = document.getElementById('frameCount');
 
-function resizeCanvases() {
-  builderCanvas.width = builderCanvas.parentElement.clientWidth;
-  builderCanvas.height = builderCanvas.parentElement.clientHeight;
-
-  mainCanvas.width = mainCanvas.parentElement.clientWidth;
-  mainCanvas.height = mainCanvas.parentElement.clientHeight;
+// Safe Custom Rounded Rectangle implementation for cross-browser support
+function drawRoundRect(targetCtx, x, y, width, height, radius) {
+  targetCtx.beginPath();
+  targetCtx.moveTo(x + radius, y);
+  targetCtx.lineTo(x + width - radius, y);
+  targetCtx.arcTo(x + width, y, x + width, y + radius, radius);
+  targetCtx.lineTo(x + width, y + height - radius);
+  targetCtx.arcTo(x + width, y + height, x + width - radius, y + height, radius);
+  targetCtx.lineTo(x + radius, y + height);
+  targetCtx.arcTo(x, y + height, x, y + height - radius, radius);
+  targetCtx.lineTo(x, y + radius);
+  targetCtx.arcTo(x, y, x + radius, y, radius);
+  targetCtx.closePath();
 }
+
+function resizeCanvases() {
+  const bParent = builderCanvas.parentElement;
+  if (bParent && bParent.clientWidth > 0) {
+    builderCanvas.width = bParent.clientWidth;
+    builderCanvas.height = bParent.clientHeight;
+  } else {
+    builderCanvas.width = window.innerWidth - 320;
+    builderCanvas.height = window.innerHeight - 60;
+  }
+
+  const mParent = mainCanvas.parentElement;
+  if (mParent && mParent.clientWidth > 0) {
+    mainCanvas.width = mParent.clientWidth;
+    mainCanvas.height = mParent.clientHeight;
+  } else {
+    mainCanvas.width = window.innerWidth - 320;
+    mainCanvas.height = window.innerHeight - 185;
+  }
+}
+
 window.addEventListener('resize', () => {
   resizeCanvases();
   drawBuilderPreview();
 });
 
-// Switch Screen Handler
+// Switch Screen Handlers
 goToAnimBtn.addEventListener('click', () => {
   builderScreen.classList.remove('active');
   animatorScreen.classList.add('active');
   step1Indicator.classList.remove('active');
   step2Indicator.classList.add('active');
-  resizeCanvases();
+
+  // Request Animation Frame ensures layout reflow happens before measuring
+  requestAnimationFrame(() => {
+    resizeCanvases();
+  });
 });
 
 backToBuilderBtn.addEventListener('click', () => {
@@ -53,8 +85,11 @@ backToBuilderBtn.addEventListener('click', () => {
   builderScreen.classList.add('active');
   step2Indicator.classList.remove('active');
   step1Indicator.classList.add('active');
-  resizeCanvases();
-  drawBuilderPreview();
+
+  requestAnimationFrame(() => {
+    resizeCanvases();
+    drawBuilderPreview();
+  });
 });
 
 // Customization Event Listeners
@@ -110,7 +145,8 @@ function drawCharacterParts(targetCtx, base, shoulder, pose, torsoAngleVal) {
   if (characterState.headShape === 'circle') {
     targetCtx.beginPath(); targetCtx.arc(headPos.x, headPos.y, 22, 0, Math.PI * 2); targetCtx.fill(); targetCtx.stroke();
   } else if (characterState.headShape === 'square') {
-    targetCtx.beginPath(); targetCtx.roundRect(headPos.x - 20, headPos.y - 20, 40, 40, 8); targetCtx.fill(); targetCtx.stroke();
+    drawRoundRect(targetCtx, headPos.x - 20, headPos.y - 20, 40, 40, 8);
+    targetCtx.fill(); targetCtx.stroke();
   } else if (characterState.headShape === 'cat') {
     targetCtx.beginPath(); targetCtx.arc(headPos.x, headPos.y, 20, 0, Math.PI * 2); targetCtx.fill(); targetCtx.stroke();
     targetCtx.beginPath();
@@ -158,7 +194,7 @@ function drawCharacterParts(targetCtx, base, shoulder, pose, torsoAngleVal) {
 
 // Draw Builder Preview (Static T-Pose / Relaxed)
 function drawBuilderPreview() {
-  if (!builderCanvas.width) return;
+  if (!builderCanvas.width || builderCanvas.width === 0) return;
   bCtx.clearRect(0, 0, builderCanvas.width, builderCanvas.height);
 
   const centerX = builderCanvas.width / 2;
@@ -217,7 +253,10 @@ function solveIK(shoulder, target, l1, l2) {
 // Animation Workspace Loop
 function animate() {
   time += 0.04;
-  if (animatorScreen.classList.contains('active')) {
+
+  if (builderScreen.classList.contains('active')) {
+    drawBuilderPreview();
+  } else if (animatorScreen.classList.contains('active')) {
     const centerX = mainCanvas.width / 2;
     const centerY = mainCanvas.height / 2 + 20;
 
@@ -314,15 +353,17 @@ const recBadge = document.getElementById('recBadge');
 startRecBtn.addEventListener('click', () => {
   const stream = mainCanvas.captureStream(30);
   recordedChunks = [];
-  mediaRecorder = new MediaRecorder(stream, { mimeType: 'video/webm' });
+  
+  const mimeType = MediaRecorder.isTypeSupported('video/webm') ? 'video/webm' : 'video/mp4';
+  mediaRecorder = new MediaRecorder(stream, { mimeType });
 
   mediaRecorder.ondataavailable = (e) => { if (e.data.size > 0) recordedChunks.push(e.data); };
   mediaRecorder.onstop = () => {
-    const blob = new Blob(recordedChunks, { type: 'video/webm' });
+    const blob = new Blob(recordedChunks, { type: mimeType });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `youtube_character_anim_${Date.now()}.webm`;
+    a.download = `youtube_character_anim_${Date.now()}.${mimeType.includes('webm') ? 'webm' : 'mp4'}`;
     a.click();
     URL.revokeObjectURL(url);
   };
@@ -410,7 +451,8 @@ document.getElementById('resetBtn').addEventListener('click', () => {
   target = { x: 100, y: -20 };
 });
 
-// Initialization
-resizeCanvases();
-drawBuilderPreview();
-animate();
+// Safe Startup Sequence
+window.addEventListener('load', () => {
+  resizeCanvases();
+  animate();
+});
