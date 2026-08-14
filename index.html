@@ -3,18 +3,136 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Nova 2D Animation Studio</title>
-    <link rel="stylesheet" href="style.css">
+    <title>Nova 2D Animation Studio - Pro Edition</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: #0f172a;
+            color: #f8fafc;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .toolbar {
+            height: 60px;
+            background: #1e293b;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20px;
+            border-bottom: 1px solid #334155;
+        }
+
+        .logo {
+            font-weight: 900;
+            color: #38bdf8;
+            font-size: 18px;
+            letter-spacing: 1px;
+        }
+
+        .controls-group, .export-group {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        select, button {
+            background: #0f172a;
+            color: #fff;
+            border: 1px solid #475569;
+            padding: 8px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: 0.2s;
+        }
+
+        button:hover, select:hover {
+            background: #334155;
+            border-color: #38bdf8;
+        }
+
+        .workspace {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: radial-gradient(circle at center, #1e293b 0%, #0f172a 100%);
+        }
+
+        canvas {
+            background: #111827;
+            border-radius: 12px;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.6);
+            cursor: grab;
+        }
+        canvas:active {
+            cursor: grabbing;
+        }
+
+        .timeline-panel {
+            height: 110px;
+            background: #1e293b;
+            border-top: 1px solid #334155;
+            display: flex;
+            flex-direction: column;
+            padding: 10px 20px;
+        }
+
+        .timeline-controls {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        #frameCounter {
+            margin-right: auto;
+            font-size: 14px;
+            color: #94a3b8;
+        }
+
+        .timeline-track {
+            flex: 1;
+            background: #0f172a;
+            border-radius: 6px;
+            border: 1px solid #334155;
+            display: flex;
+            align-items: center;
+            padding: 0 10px;
+            gap: 8px;
+            overflow-x: auto;
+        }
+
+        .keyframe-node {
+            width: 24px;
+            height: 24px;
+            background: #38bdf8;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+            color: #0f172a;
+            font-weight: bold;
+            flex-shrink: 0;
+        }
+    </style>
 </head>
 <body>
 
     <header class="toolbar">
-        <div class="logo">✨ NOVA STUDIO</div>
+        <div class="logo">✨ NOVA 2D STUDIO</div>
         <div class="controls-group">
-            <label>الشخصية:</label>
+            <label>اختر الشخصية:</label>
             <select id="charSelect" onchange="changeCharacter(this.value)">
                 <option value="nova">نوفا (Nova)</option>
-                <option value="cyber">سايبر بوي (Cyber)</option>
+                <option value="zack">زاك (Zack)</option>
+                <option value="mimi">ميمي (Mimi)</option>
             </select>
             
             <label>التعبير:</label>
@@ -26,8 +144,8 @@
             </select>
         </div>
         <div class="export-group">
-            <button onclick="saveProject()">💾 تصدير المشروع (JSON)</button>
-            <button onclick="loadProjectPrompt()">📂 استيراد مشروع</button>
+            <button onclick="saveProject()">💾 تصدير المشروع</button>
+            <button onclick="loadProjectPrompt()">📂 استيراد مشهد</button>
         </div>
     </header>
 
@@ -37,16 +155,330 @@
 
     <footer class="timeline-panel">
         <div class="timeline-controls">
-            <button onclick="saveKeyframe()">📸 إضافة مشهد (Keyframe)</button>
+            <button onclick="saveKeyframe()">📸 إضافة فريم (Keyframe)</button>
             <button onclick="playAnimation()">▶️ تشغيل الأنيميشن</button>
-            <button onclick="clearKeyframes()">🗑️ مسح المشاهد</button>
+            <button onclick="clearKeyframes()">🗑️ مسح الفريمات</button>
             <span id="frameCounter">المشاهد المحفوظة: 0</span>
         </div>
-        <div class="timeline-track" id="timelineTrack">
-            <!-- شريط الفريمات المرئي -->
-        </div>
+        <div class="timeline-track" id="timelineTrack"></div>
     </footer>
 
-    <script src="app.js"></script>
+    <script>
+        const canvas = document.getElementById('animCanvas');
+        const ctx = canvas.getContext('2d');
+
+        // مكتبة الشخصيات المحلية الاحترافية (بدون صور خارجية)
+        const characters = {
+            nova: {
+                name: 'Nova',
+                skin: '#fcd34d',
+                primary: '#1e3a8a',
+                primaryDark: '#1e326e',
+                pants: '#d4d4d8',
+                accent: '#db2777',
+                hair: '#ea580c',
+                style: 'hoodie'
+            },
+            zack: {
+                name: 'Zack',
+                skin: '#f59e0b',
+                primary: '#065f46',
+                primaryDark: '#047857',
+                pants: '#1e293b',
+                accent: '#3b82f6',
+                hair: '#9333ea',
+                style: 'jacket'
+            },
+            mimi: {
+                name: 'Mimi',
+                skin: '#fbcfe8',
+                primary: '#db2777',
+                primaryDark: '#be185d',
+                pants: '#4f46e5',
+                accent: '#38bdf8',
+                hair: '#06b6d4',
+                style: 'robot'
+            }
+        };
+
+        let activeCharacterKey = 'nova';
+        let currentExpression = 'normal';
+
+        // الهيكل العظمي متعدد المفاصل
+        const char = {
+            root: { x: 400, y: 320, radius: 25 },
+            limbs: [
+                { id: 'leftArm', type: 'arm', side: 'back', startX: -25, startY: -70, l1: 65, l2: 60, flip: -1, target: {x: 280, y: 240} },
+                { id: 'leftLeg', type: 'leg', side: 'back', startX: -15, startY: 10, l1: 75, l2: 70, flip: 1, target: {x: 340, y: 500} },
+                { id: 'rightLeg', type: 'leg', side: 'front', startX: 15, startY: 10, l1: 75, l2: 70, flip: 1, target: {x: 460, y: 500} },
+                { id: 'rightArm', type: 'arm', side: 'front', startX: 25, startY: -70, l1: 65, l2: 60, flip: -1, target: {x: 520, y: 240} }
+            ]
+        };
+
+        let activeNode = null;
+        let keyframes = [];
+        let isPlaying = false;
+        let animProgress = 0;
+        let currentFrameIndex = 0;
+        let time = 0;
+
+        function solveIK(startX, startY, targetX, targetY, l1, l2, flip) {
+            let dx = targetX - startX;
+            let dy = targetY - startY;
+            let dist = Math.sqrt(dx * dx + dy * dy);
+            if (dist > l1 + l2) dist = l1 + l2 - 0.001;
+
+            let angle2 = Math.acos((dist * dist - l1 * l1 - l2 * l2) / (2 * l1 * l2)) * flip;
+            let angle1 = Math.atan2(dy, dx) - Math.atan2(l2 * Math.sin(angle2), l1 + l2 * Math.cos(angle2));
+            return { angle1, angle2 };
+        }
+
+        // رسم الشخصية الاحترافية محلياً عبر الكود
+        function drawCharacter() {
+            let theme = characters[activeCharacterKey];
+            let sx = char.root.x;
+            let sy = char.root.y;
+
+            // 1. الأطراف الخلفية
+            char.limbs.filter(l => l.side === 'back').forEach(limb => drawLimb(limb, theme));
+
+            // 2. الجذع والملابس
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
+            
+            ctx.beginPath();
+            ctx.moveTo(sx, sy);
+            ctx.lineTo(sx, sy - 80);
+            ctx.lineWidth = 44;
+            ctx.strokeStyle = theme.primary;
+            ctx.stroke();
+            ctx.lineWidth = 4;
+            ctx.strokeStyle = '#09090b';
+            ctx.stroke();
+
+            // تفاصيل الصدر والشعار
+            ctx.fillStyle = theme.accent;
+            ctx.beginPath();
+            ctx.arc(sx, sy - 40, 10, 0, Math.PI * 2);
+            ctx.fill();
+
+            // 3. الرأس وملامح الوجه (ثبات تام ومنع الاعوجاج)
+            let headX = sx;
+            let headY = sy - 125;
+            
+            // الشعر الخلفي
+            ctx.fillStyle = theme.hair;
+            ctx.beginPath();
+            ctx.arc(headX, headY, 52, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.stroke();
+
+            // الوجه
+            ctx.fillStyle = theme.skin;
+            ctx.beginPath();
+            ctx.arc(headX, headY, 44, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.stroke();
+
+            // رسم تعابير الوجه
+            drawFacialExpressions(headX, headY, currentExpression);
+
+            // الشعر الأمامي المميز
+            ctx.fillStyle = theme.hair;
+            ctx.beginPath();
+            ctx.moveTo(headX - 40, headY - 30);
+            ctx.lineTo(headX, headY - 60);
+            ctx.lineTo(headX + 35, headY - 30);
+            ctx.closePath();
+            ctx.fill();
+            ctx.stroke();
+
+            // 4. الأطراف الأمامية
+            char.limbs.filter(l => l.side === 'front').forEach(limb => drawLimb(limb, theme));
+
+            // مركز التحكم (الحوض)
+            ctx.fillStyle = 'rgba(239, 68, 68, 0.9)';
+            ctx.beginPath(); ctx.arc(sx, sy, 16, 0, Math.PI * 2); ctx.fill();
+            ctx.strokeStyle = '#fff'; ctx.lineWidth = 2; ctx.stroke();
+        }
+
+        function drawLimb(limb, theme) {
+            let sx = char.root.x + limb.startX;
+            let sy = char.root.y + limb.startY;
+            let { angle1, angle2 } = solveIK(sx, sy, limb.target.x, limb.target.y, limb.l1, limb.l2, limb.flip);
+
+            ctx.save();
+            ctx.translate(sx, sy);
+            ctx.rotate(angle1);
+
+            let thickness = limb.type === 'arm' ? 18 : 20;
+            ctx.lineWidth = thickness;
+            ctx.strokeStyle = limb.side === 'front' ? theme.primary : theme.primaryDark;
+            
+            ctx.beginPath();
+            ctx.moveTo(0, 0);
+            ctx.lineTo(limb.l1, 0);
+            ctx.stroke();
+            ctx.lineWidth = 3; ctx.strokeStyle = '#09090b'; ctx.stroke();
+
+            ctx.translate(limb.l1, 0);
+            ctx.rotate(angle2);
+            ctx.lineWidth = thickness - 2;
+            ctx.strokeStyle = limb.side === 'front' ? theme.primary : theme.primaryDark;
+            ctx.beginPath();
+            ctx.moveTo(0, 0);
+            ctx.lineTo(limb.l2, 0);
+            ctx.stroke();
+            ctx.lineWidth = 3; ctx.strokeStyle = '#09090b'; ctx.stroke();
+
+            ctx.restore();
+
+            // مقبض التحكم المتحرك
+            ctx.fillStyle = 'rgba(56, 189, 248, 0.8)';
+            ctx.beginPath(); ctx.arc(limb.target.x, limb.target.y, 12, 0, Math.PI * 2); ctx.fill();
+        }
+
+        function drawFacialExpressions(hx, hy, expr) {
+            ctx.fillStyle = '#09090b';
+            ctx.strokeStyle = '#09090b';
+            
+            let blink = Math.random() > 0.98 ? 2 : 7;
+            // العيون
+            ctx.beginPath(); ctx.ellipse(hx - 14, hy - 5, 5, blink, 0, 0, Math.PI * 2); ctx.fill();
+            ctx.beginPath(); ctx.ellipse(hx + 14, hy - 5, 5, blink, 0, 0, Math.PI * 2); ctx.fill();
+
+            // التعبيرات
+            ctx.lineWidth = 3;
+            if (expr === 'happy') {
+                ctx.beginPath(); ctx.arc(hx, hy + 10, 12, 0, Math.PI); ctx.stroke();
+            } else if (expr === 'angry') {
+                ctx.beginPath(); ctx.moveTo(hx - 22, hy - 16); ctx.lineTo(hx - 6, hy - 10); ctx.stroke();
+                ctx.beginPath(); ctx.moveTo(hx + 22, hy - 16); ctx.lineTo(hx + 6, hy - 10); ctx.stroke();
+                ctx.beginPath(); ctx.arc(hx, hy + 14, 8, Math.PI, 0); ctx.stroke();
+            } else if (expr === 'shocked') {
+                ctx.beginPath(); ctx.arc(hx, hy + 12, 7, 0, Math.PI * 2); ctx.fill();
+            } else {
+                ctx.beginPath(); ctx.arc(hx, hy + 10, 8, 0.1, Math.PI - 0.1); ctx.stroke();
+            }
+        }
+
+        function render() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            if (!isPlaying && !activeNode) {
+                time += 0.05;
+                char.root.y += Math.sin(time) * 0.25;
+            } else if (isPlaying && keyframes.length > 1) {
+                let fA = keyframes[currentFrameIndex];
+                let fB = keyframes[(currentFrameIndex + 1) % keyframes.length];
+                
+                animProgress += 0.03;
+                let t = animProgress < 0.5 ? 2 * animProgress * animProgress : 1 - Math.pow(-2 * animProgress + 2, 3) / 2;
+
+                for (let i = 0; i < char.limbs.length; i++) {
+                    char.limbs[i].target.x = fA.limbs[i].x + (fB.limbs[i].x - fA.limbs[i].x) * t;
+                    char.limbs[i].target.y = fA.limbs[i].y + (fB.limbs[i].y - fA.limbs[i].y) * t;
+                }
+
+                if (animProgress >= 1) {
+                    animProgress = 0;
+                    currentFrameIndex++;
+                    if (currentFrameIndex >= keyframes.length - 1) isPlaying = false;
+                }
+            }
+
+            drawCharacter();
+            requestAnimationFrame(render);
+        }
+
+        function changeCharacter(key) { activeCharacterKey = key; }
+        function changeExpression(expr) { currentExpression = expr; }
+
+        function saveKeyframe() {
+            let frameData = {
+                limbs: char.limbs.map(l => ({ x: l.target.x, y: l.target.y }))
+            };
+            keyframes.push(frameData);
+            updateTimelineUI();
+        }
+
+        function clearKeyframes() {
+            keyframes = [];
+            updateTimelineUI();
+        }
+
+        function playAnimation() {
+            if (keyframes.length < 2) return alert("أضف فريمين على الأقل للتشغيل!");
+            isPlaying = true;
+            animProgress = 0;
+            currentFrameIndex = 0;
+        }
+
+        function updateTimelineUI() {
+            const track = document.getElementById('timelineTrack');
+            document.getElementById('frameCounter').innerText = `المشاهد المحفوظة: ${keyframes.length}`;
+            track.innerHTML = '';
+            keyframes.forEach((_, idx) => {
+                let node = document.createElement('div');
+                node.className = 'keyframe-node';
+                node.innerText = idx + 1;
+                track.appendChild(node);
+            });
+        }
+
+        function saveProject() {
+            let projectData = { character: activeCharacterKey, keyframes: keyframes };
+            let blob = new Blob([JSON.stringify(projectData, null, 2)], { type: 'json' });
+            let a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = 'pro-animation-project.json';
+            a.click();
+        }
+
+        function loadProjectPrompt() {
+            let input = document.createElement('input');
+            input.type = 'file';
+            input.accept = '.json';
+            input.onchange = e => {
+                let file = e.target.files[0];
+                let reader = new FileReader();
+                reader.onload = event => {
+                    let data = JSON.parse(event.target.result);
+                    activeCharacterKey = data.character;
+                    document.getElementById('charSelect').value = data.character;
+                    keyframes = data.keyframes;
+                    updateTimelineUI();
+                };
+                reader.readAsText(file);
+            };
+            input.click();
+        }
+
+        let getPos = e => {
+            let r = canvas.getBoundingClientRect();
+            let cx = e.touches ? e.touches[0].clientX : e.clientX;
+            let cy = e.touches ? e.touches[0].clientY : e.clientY;
+            return { x: cx - r.left, y: cy - r.top };
+        };
+
+        canvas.addEventListener('mousedown', e => {
+            let p = getPos(e);
+            if (Math.hypot(p.x - char.root.x, p.y - char.root.y) < 30) { activeNode = char.root; return; }
+            for (let l of char.limbs) {
+                if (Math.hypot(p.x - l.target.x, p.y - l.target.y) < 20) { activeNode = l.target; return; }
+            }
+        });
+
+        window.addEventListener('mousemove', e => {
+            if (!activeNode) return;
+            let p = getPos(e);
+            activeNode.x = p.x;
+            activeNode.y = p.y;
+        });
+
+        window.addEventListener('mouseup', () => activeNode = null);
+
+        render();
+    </script>
 </body>
 </html>
