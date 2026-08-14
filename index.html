@@ -2,7 +2,36 @@
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"><!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>محرر العظام والشخصيات</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <div class="app-container">
+    <!-- الشريط الجانبي لاختيار الشخصية -->
+    <aside class="sidebar">
+      <h2>اختر الشخصية</h2>
+      <div class="char-selector">
+        <button class="char-btn active" data-char="robot">روبوت مرن</button>
+        <button class="char-btn" data-char="alien">كائن فضائي</button>
+      </div>
+      <p class="hint">💡 انقر واسحب الماوس على مفاصل الشخصية (الرأس، الأيدي، الأرجل) لتحريك عظامها.</p>
+    </aside>
+
+    <!-- منطقة عرض الكانفاس -->
+    <main class="viewport">
+      <canvas id="canvas"></canvas>
+    </main>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
   <title>تصميم الشخصية</title><!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
