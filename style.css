@@ -1,0 +1,125 @@
+:root {
+  --bg-color: #1e1e2e;
+  --panel-bg: #2b2b3d;
+  --accent-color: #74c7ec;
+  --accent-hover: #89b4fa;
+  --text-color: #cdd6f4;
+  --border-color: #45475a;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  font-family: system-ui, -apple-system, sans-serif;
+}
+
+body {
+  background-color: var(--bg-color);
+  color: var(--text-color);
+  height: 100vh;
+  overflow: hidden;
+}
+
+.app-container {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+}
+
+.toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 20px;
+  background-color: var(--panel-bg);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.toolbar h2 span {
+  font-size: 12px;
+  background: var(--accent-color);
+  color: #111;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.workspace {
+  display: flex;
+  flex: 1;
+  background-color: #181825;
+  position: relative;
+}
+
+#stage {
+  flex: 1;
+  background-image: radial-gradient(#313244 1px, transparent 1px);
+  background-size: 20px 20px;
+  cursor: crosshair;
+}
+
+.sidebar {
+  width: 250px;
+  background-color: var(--panel-bg);
+  border-right: 1px solid var(--border-color);
+  padding: 15px;
+}
+
+.timeline-container {
+  background-color: var(--panel-bg);
+  border-top: 1px solid var(--border-color);
+  padding: 15px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.controls {
+  display: flex;
+  gap: 15px;
+  align-items: center;
+}
+
+button {
+  background-color: var(--accent-color);
+  color: #11111b;
+  border: none;
+  padding: 8px 14px;
+  border-radius: 6px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+button:hover {
+  background-color: var(--accent-hover);
+}
+
+.timeline-slider {
+  position: relative;
+  width: 100%;
+}
+
+#timeline-scrubber {
+  width: 100%;
+  accent-color: var(--accent-color);
+  cursor: pointer;
+}
+
+.keyframes-track {
+  position: relative;
+  height: 12px;
+  background: #11111b;
+  border-radius: 6px;
+  margin-top: 5px;
+}
+
+.keyframe-marker {
+  position: absolute;
+  top: 1px;
+  width: 10px;
+  height: 10px;
+  background-color: #f9e2af;
+  border-radius: 50%;
+  transform: translateX(-50%);
+}
