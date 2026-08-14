@@ -3,42 +3,71 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>2D Skeletal Animator MVP</title>
+  <title>2D Skeletal Animator MVP v2</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <div class="app-container">
     <!-- الشريط العلوي -->
     <header class="toolbar">
-      <h2>محرر التحريك ثنائي الأبعاد <span>MVP</span></h2>
+      <div class="brand">
+        <h2>محرر التحريك ثنائي الأبعاد <span>MVP v2</span></h2>
+      </div>
       <div class="actions">
-        <button id="btn-save">حفظ المشروع (JSON)</button>
-        <button id="btn-load">تحميل مشروع</button>
+        <button id="btn-preview" class="btn-secondary">👁️ اختبار ورؤية الأنيميشن</button>
+        <button id="btn-export-video" class="btn-accent">🎥 تحميل فيديو (WebM)</button>
+        <button id="btn-save" class="btn-outline">💾 حفظ (JSON)</button>
+        <button id="btn-load" class="btn-outline">📂 تحميل</button>
         <input type="file" id="file-input" accept=".json" style="display: none;">
       </div>
     </header>
 
     <!-- منطقة العمل (Canvas) -->
     <main class="workspace">
-      <canvas id="stage" width="900" height="550"></canvas>
-      <div class="sidebar">
-        <h3>بيانات العظمة المختارة</h3>
-        <div id="bone-info">
-          <p>اختر عظمة من الشاشة لتحريكها بالماوس</p>
-        </div>
+      <div class="canvas-wrapper">
+        <canvas id="stage"></canvas>
       </div>
+      <aside class="sidebar">
+        <h3>تفاصيل العظمة</h3>
+        <div id="bone-info">
+          <p class="placeholder-text">انقر على أي مفصل (دائرة ملونة) لتحريك العظمة بالماوس.</p>
+        </div>
+
+        <hr class="divider">
+
+        <h3>خيارات العرض</h3>
+        <label class="checkbox-label">
+          <input type="checkbox" id="chk-show-bones" checked>
+          إظهار العظام والمفاصل
+        </label>
+      </aside>
     </main>
 
     <!-- الـ Timeline والأدوات -->
     <footer class="timeline-container">
       <div class="controls">
-        <button id="btn-play">▶ تشغيل</button>
-        <button id="btn-add-keyframe">+ إضافة Keyframe</button>
-        <label>
-          السرعة (FPS):
-          <input type="number" id="input-fps" value="30" min="1" max="60">
-        </label>
-        <span id="frame-counter">Frame: 1 / 30</span>
+        <div class="playback-btns">
+          <button id="btn-play" class="btn-primary">▶ تشغيل</button>
+          <button id="btn-prev-kf" title="Keyframe السابق">⏮️</button>
+          <button id="btn-next-kf" title="Keyframe التالي">⏭️</button>
+        </div>
+
+        <div class="kf-management">
+          <button id="btn-add-kf" class="btn-success">➕ إضافة Keyframe</button>
+          <button id="btn-del-kf" class="btn-danger">🗑️ حذف Keyframe</button>
+        </div>
+
+        <div class="settings">
+          <label>
+            السرعة (FPS):
+            <input type="number" id="input-fps" value="30" min="1" max="60">
+          </label>
+          <label>
+            عدد Frames:
+            <input type="number" id="input-total-frames" value="30" min="5" max="300">
+          </label>
+          <span id="frame-counter" class="badge">Frame: 1 / 30</span>
+        </div>
       </div>
 
       <div class="timeline-slider">
@@ -46,6 +75,23 @@
         <div class="keyframes-track" id="keyframes-track"></div>
       </div>
     </footer>
+  </div>
+
+  <!-- Modal معاينة واختبار الأنيميشن -->
+  <div id="preview-modal" class="modal hidden">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>👁️ معاينة الأنيميشن النهائي</h3>
+        <button id="btn-close-modal" class="close-btn">&times;</button>
+      </div>
+      <div class="modal-body">
+        <canvas id="preview-stage" width="600" height="450"></canvas>
+      </div>
+      <div class="modal-footer">
+        <button id="btn-modal-record" class="btn-accent">🎥 تحميل فيديو من المعاينة</button>
+        <button id="btn-modal-close" class="btn-outline">إغلاق</button>
+      </div>
+    </div>
   </div>
 
   <script src="app.js"></script>
