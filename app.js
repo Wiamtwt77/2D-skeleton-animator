@@ -10,21 +10,30 @@ let animationTimer = null;
 let selectedBone = null;
 let isDragging = false;
 
+// دالة ضبط أبعاد الـ Canvas مع الشاشة بدقة
+function resizeCanvas() {
+  const rect = canvas.getBoundingClientRect();
+  canvas.width = rect.width;
+  canvas.height = rect.height;
+  computeWorldTransforms();
+  render();
+}
+
 // هيكل العظام (Skeleton Definition)
 let skeleton = [
-  { id: 'root', parentId: null, x: 450, y: 300, length: 0, rotation: 0, color: '#f38ba8' },
+  { id: 'root', parentId: null, x: 300, y: 250, length: 0, rotation: 0, color: '#f38ba8' },
   { id: 'torso', parentId: 'root', x: 0, y: -80, length: 80, rotation: 0, color: '#a6e3a1' },
   { id: 'head', parentId: 'torso', x: 0, y: -50, length: 40, rotation: 0, color: '#f9e2af' },
-  { id: 'arm_R', parentId: 'torso', x: 20, y: -70, length: 60, rotation: 30, color: '#89b4fa' },
-  { id: 'arm_L', parentId: 'torso', x: -20, y: -70, length: 60, rotation: -30, color: '#89b4fa' }
+  { id: 'arm_R', parentId: 'torso', x: 25, y: -70, length: 60, rotation: 30, color: '#89b4fa' },
+  { id: 'arm_L', parentId: 'torso', x: -25, y: -70, length: 60, rotation: -30, color: '#89b4fa' }
 ];
 
-// Keyframes: تخزين الوضعية لكل Frame متواجد
+// Keyframes تخزين الوضعيات
 let keyframes = [
   {
     frame: 1,
     bones: {
-      root: { x: 450, y: 300, rotation: 0 },
+      root: { x: 300, y: 250, rotation: 0 },
       torso: { rotation: 0 },
       head: { rotation: 0 },
       arm_R: { rotation: 30 },
@@ -34,7 +43,7 @@ let keyframes = [
   {
     frame: 15,
     bones: {
-      root: { x: 450, y: 300, rotation: 0 },
+      root: { x: 300, y: 250, rotation: 0 },
       torso: { rotation: 10 },
       head: { rotation: -10 },
       arm_R: { rotation: -60 },
@@ -43,7 +52,16 @@ let keyframes = [
   }
 ];
 
-// --- 2. محرك حساب التحويلات الهرمية (Forward Kinematics) ---
+// --- 2. تحويل إحداثيات الماوس لتتطابق مع الـ Canvas ---
+function getMousePos(e) {
+  const rect = canvas.getBoundingClientRect();
+  return {
+    x: (e.clientX - rect.left) * (canvas.width / rect.width),
+    y: (e.clientY - rect.top) * (canvas.height / rect.height)
+  };
+}
+
+// --- 3. محرك حساب التحويلات الهرمية (Forward Kinematics) ---
 function computeWorldTransforms() {
   const bonesMap = {};
   skeleton.forEach(b => bonesMap[b.id] = b);
@@ -64,19 +82,17 @@ function computeWorldTransforms() {
       bone.worldRot = parent.worldRot + bone.rotation;
     }
 
-    // حساب نقطة نهاية العظمة بناءً على طولها وزاويتها
     const endRad = (bone.worldRot * Math.PI) / 180;
     bone.endX = bone.worldX + Math.sin(endRad) * bone.length;
     bone.endY = bone.worldY - Math.cos(endRad) * bone.length;
 
-    // تطبيق الحساب للأبناء
     skeleton.filter(b => b.parentId === bone.id).forEach(calculate);
   }
 
   skeleton.filter(b => b.parentId === null).forEach(calculate);
 }
 
-// --- 3. حساب الـ Interpolation (Lerp) بين الـ Keyframes ---
+// --- 4. حساب الـ Interpolation (Lerp) بين الـ Keyframes ---
 function lerpAngle(start, end, t) {
   let delta = (end - start) % 360;
   if (delta > 180) delta -= 360;
@@ -87,9 +103,7 @@ function lerpAngle(start, end, t) {
 function updateBonesForCurrentFrame() {
   if (keyframes.length === 0) return;
 
-  // ترتيب Keyframes حسَب أرقام الـ Frames
   const sorted = [...keyframes].sort((a, b) => a.frame - b.frame);
-  
   let prevKF = sorted.filter(k => k.frame <= currentFrame).pop();
   let nextKF = sorted.find(k => k.frame > currentFrame);
 
@@ -115,13 +129,24 @@ function updateBonesForCurrentFrame() {
   computeWorldTransforms();
 }
 
-// --- 4. الرسم على الـ Canvas ---
+// حفظ الوضعية الحالية للـ Keyframe تلقائياً عند التعديل
+function saveCurrentStateToKeyframe() {
+  let kf = keyframes.find(k => k.frame === currentFrame);
+  if (!kf) {
+    kf = { frame: currentFrame, bones: {} };
+    keyframes.push(kf);
+  }
+  skeleton.forEach(b => {
+    kf.bones[b.id] = { rotation: b.rotation, x: b.x, y: b.y };
+  });
+}
+
+// --- 5. الرسم على الـ Canvas ---
 function render() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-  // رسم العظام والوصلات
   skeleton.forEach(bone => {
-    // رسم جسم العظمة (Line)
+    // رسم جسم العظمة
     if (bone.length > 0) {
       ctx.beginPath();
       ctx.moveTo(bone.worldX, bone.worldY);
@@ -134,8 +159,8 @@ function render() {
 
     // رسم مفصل العظمة (Joint)
     ctx.beginPath();
-    ctx.arc(bone.worldX, bone.worldY, selectedBone === bone ? 9 : 6, 0, Math.PI * 2);
-    ctx.fillStyle = selectedBone === bone ? '#f5e0dc' : bone.color;
+    ctx.arc(bone.worldX, bone.worldY, selectedBone === bone ? 10 : 7, 0, Math.PI * 2);
+    ctx.fillStyle = selectedBone === bone ? '#ffffff' : bone.color;
     ctx.fill();
     ctx.strokeStyle = '#11111b';
     ctx.lineWidth = 2;
@@ -143,17 +168,15 @@ function render() {
   });
 }
 
-// --- 5. التفاعل بالماوس (اختيار وتحريك العظام) ---
+// --- 6. الأحداث والتفاعل بالماوس ---
 canvas.addEventListener('mousedown', (e) => {
-  const rect = canvas.getBoundingClientRect();
-  const mouseX = e.clientX - rect.left;
-  const mouseY = e.clientY - rect.top;
+  const pos = getMousePos(e);
 
-  // البحث عن أقرب عظمة
   let found = null;
+  // البحث عن أقرب مفصل ضمن نطاق 25 بكسل
   skeleton.forEach(bone => {
-    const dist = Math.hypot(bone.worldX - mouseX, bone.worldY - mouseY);
-    if (dist < 15) found = bone;
+    const dist = Math.hypot(bone.worldX - pos.x, bone.worldY - pos.y);
+    if (dist < 25) found = bone;
   });
 
   selectedBone = found;
@@ -165,17 +188,14 @@ canvas.addEventListener('mousedown', (e) => {
 canvas.addEventListener('mousemove', (e) => {
   if (!isDragging || !selectedBone) return;
 
-  const rect = canvas.getBoundingClientRect();
-  const mouseX = e.clientX - rect.left;
-  const mouseY = e.clientY - rect.top;
+  const pos = getMousePos(e);
 
   if (selectedBone.id === 'root') {
-    selectedBone.x = mouseX;
-    selectedBone.y = mouseY;
+    selectedBone.x = pos.x;
+    selectedBone.y = pos.y;
   } else {
-    // حساب الزاوية الجديدة بناءً على موقع الماوس بالنسبة لمفصل العظمة الأب
-    const dx = mouseX - selectedBone.worldX;
-    const dy = mouseY - selectedBone.worldY;
+    const dx = pos.x - selectedBone.worldX;
+    const dy = pos.y - selectedBone.worldY;
     let angle = Math.atan2(dy, dx) * (180 / Math.PI) + 90;
 
     const parent = skeleton.find(b => b.id === selectedBone.parentId);
@@ -183,12 +203,14 @@ canvas.addEventListener('mousemove', (e) => {
   }
 
   computeWorldTransforms();
+  saveCurrentStateToKeyframe();
+  updateUI();
   render();
 });
 
 window.addEventListener('mouseup', () => isDragging = false);
 
-// --- 6. إدارة الـ Timeline والتشغيل ---
+// --- 7. إدارة الـ Timeline والتشغيل ---
 const scrubber = document.getElementById('timeline-scrubber');
 const frameCounter = document.getElementById('frame-counter');
 const btnPlay = document.getElementById('btn-play');
@@ -196,8 +218,7 @@ const btnPlay = document.getElementById('btn-play');
 function updateUI() {
   scrubber.value = currentFrame;
   frameCounter.innerText = `Frame: ${currentFrame} / ${totalFrames}`;
-  
-  // تحديث نقاط الـ Keyframes في الشريط
+
   const track = document.getElementById('keyframes-track');
   track.innerHTML = '';
   keyframes.forEach(kf => {
@@ -214,7 +235,7 @@ function updateUI() {
       <p><b>الدوران:</b> ${Math.round(selectedBone.rotation)}°</p>
     `;
   } else {
-    info.innerHTML = `<p>اختر عظمة من الشاشة لتحريكها بالماوس</p>`;
+    info.innerHTML = `<p>اختر عظمة (المفاصل الملونة) لتحريكها بالماوس</p>`;
   }
 }
 
@@ -242,23 +263,10 @@ btnPlay.addEventListener('click', () => {
 });
 
 document.getElementById('btn-add-keyframe').addEventListener('click', () => {
-  const existingIdx = keyframes.findIndex(k => k.frame === currentFrame);
-  const boneStates = {};
-  
-  skeleton.forEach(b => {
-    boneStates[b.id] = { rotation: b.rotation, x: b.x, y: b.y };
-  });
-
-  if (existingIdx >= 0) {
-    keyframes[existingIdx].bones = boneStates;
-  } else {
-    keyframes.push({ frame: currentFrame, bones: boneStates });
-  }
-
+  saveCurrentStateToKeyframe();
   updateUI();
 });
 
-// --- 7. حفظ وتحميل ملف المشروع (JSON) ---
 document.getElementById('btn-save').addEventListener('click', () => {
   const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify({ skeleton, keyframes, fps }, null, 2));
   const downloadAnchor = document.createElement('a');
@@ -269,7 +277,10 @@ document.getElementById('btn-save').addEventListener('click', () => {
   downloadAnchor.remove();
 });
 
-// التشغيل المبدئي عند فتح الصفحة
-updateBonesForCurrentFrame();
-updateUI();
-render();
+// تهيئة وإعادة ضبط الحجم عند الفتح والـ Resize
+window.addEventListener('resize', resizeCanvas);
+setTimeout(() => {
+  resizeCanvas();
+  updateBonesForCurrentFrame();
+  updateUI();
+}, 50);
