@@ -3,283 +3,104 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>نظام الحركة الذكي - Smart Procedural Rig & Storyboard</title>
-  <style>
-    :root {
-      --bg-color: #0f172a;
-      --card-bg: #1e293b;
-      --accent-color: #38bdf8;
-      --accent-hover: #0284c7;
-      --green-glow: #22c55e;
-      --text-color: #f8fafc;
-      --subtext-color: #94a3b8;
-    }
-
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      user-select: none;
-    }
-
-    body {
-      background-color: var(--bg-color);
-      color: var(--text-color);
-      display: flex;
-      flex-direction: column;
-      height: 100vh;
-      overflow: hidden;
-    }
-
-    /* Header */
-    header {
-      padding: 15px 25px;
-      background: rgba(30, 41, 59, 0.8);
-      backdrop-filter: blur(10px);
-      border-bottom: 1px solid #334155;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
-    header h1 {
-      font-size: 1.2rem;
-      color: var(--accent-color);
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-
-    .badge {
-      background: rgba(56, 189, 248, 0.15);
-      color: var(--accent-color);
-      padding: 3px 10px;
-      border-radius: 12px;
-      font-size: 0.8rem;
-      border: 1px solid var(--accent-color);
-    }
-
-    /* Main Content Layout */
-    .main-container {
-      display: flex;
-      flex: 1;
-      position: relative;
-      overflow: hidden;
-    }
-
-    /* Canvas Area */
-    .viewport {
-      flex: 1;
-      position: relative;
-      background: radial-gradient(circle at center, #1e293b 0%, #0f172a 100%);
-      display: flex;
-      justify-content: center;
-      align-items: center;
-    }
-
-    canvas {
-      display: block;
-      cursor: crosshair;
-    }
-
-    /* Sidebar Controls */
-    .controls-panel {
-      width: 300px;
-      background: var(--card-bg);
-      border-right: 1px solid #334155;
-      padding: 20px;
-      display: flex;
-      flex-direction: column;
-      gap: 20px;
-      box-shadow: -5px 0 25px rgba(0,0,0,0.3);
-    }
-
-    .control-group {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
-
-    .control-group label {
-      font-size: 0.85rem;
-      color: var(--subtext-color);
-      display: flex;
-      justify-content: space-between;
-    }
-
-    input[type="range"] {
-      accent-color: var(--accent-color);
-      cursor: pointer;
-    }
-
-    .btn {
-      background: var(--accent-color);
-      color: #0f172a;
-      border: none;
-      padding: 10px 16px;
-      border-radius: 8px;
-      font-weight: bold;
-      cursor: pointer;
-      transition: all 0.2s ease;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-    }
-
-    .btn:hover {
-      background: var(--accent-hover);
-      color: #fff;
-      transform: translateY(-2px);
-    }
-
-    .btn-secondary {
-      background: #334155;
-      color: var(--text-color);
-    }
-
-    .btn-secondary:hover {
-      background: #475569;
-    }
-
-    /* Bottom Timeline (Thumbnails Bar) */
-    .timeline-container {
-      height: 140px;
-      background: #090d16;
-      border-top: 1px solid #334155;
-      padding: 10px 20px;
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
-
-    .timeline-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
-    .timeline-header span {
-      font-size: 0.85rem;
-      color: var(--subtext-color);
-    }
-
-    .thumbnails-strip {
-      display: flex;
-      gap: 12px;
-      overflow-x: auto;
-      padding-bottom: 5px;
-      height: 90px;
-      align-items: center;
-    }
-
-    .thumbnails-strip::-webkit-scrollbar {
-      height: 6px;
-    }
-
-    .thumbnails-strip::-webkit-scrollbar-thumb {
-      background: #334155;
-      border-radius: 4px;
-    }
-
-    .thumb-card {
-      min-width: 100px;
-      height: 75px;
-      background: var(--card-bg);
-      border: 2px solid #334155;
-      border-radius: 8px;
-      cursor: pointer;
-      overflow: hidden;
-      position: relative;
-      transition: all 0.2s ease;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-    }
-
-    .thumb-card:hover {
-      border-color: var(--accent-color);
-      transform: scale(1.05);
-    }
-
-    .thumb-card.active {
-      border-color: var(--green-glow);
-      box-shadow: 0 0 10px rgba(34, 197, 94, 0.4);
-    }
-
-    .thumb-card canvas {
-      width: 100%;
-      height: 100%;
-      object-fit: contain;
-    }
-
-    .thumb-number {
-      position: absolute;
-      top: 4px;
-      right: 4px;
-      background: rgba(0,0,0,0.6);
-      font-size: 0.65rem;
-      padding: 2px 6px;
-      border-radius: 4px;
-    }
-
-    /* Hints Overlay */
-    .hint {
-      position: absolute;
-      top: 15px;
-      right: 15px;
-      background: rgba(15, 23, 42, 0.7);
-      padding: 8px 14px;
-      border-radius: 8px;
-      font-size: 0.8rem;
-      border: 1px solid #334155;
-      pointer-events: none;
-    }
-  </style>
+  <title>استوديو التحريك وتصوير الفيديو - Animation Studio</title>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
   <header>
-    <h1>محاكاة الحركة الذكية (IK + Storyboard)</h1>
-    <span class="badge">النسخة التفاعلية 1.0</span>
+    <h1>استوديو تحريك الشخصيات وتصدير الفيديو</h1>
+    <div class="status-bar">
+      <span id="recBadge" class="badge badge-rec" style="display: none;">🔴 جاري التسجيل...</span>
+      <span class="badge">النسخة التفاعلية 2.0</span>
+    </div>
   </header>
 
   <div class="main-container">
     
-    <!-- Area to draw Canvas -->
-    <div class="viewport">
-      <div class="hint">حرك الدائرة الخضراء بسحب الماوس لرؤية انحناء الجذع والذراع التلقائي</div>
-      <canvas id="mainCanvas"></canvas>
-    </div>
-
     <!-- Sidebar Controls -->
     <div class="controls-panel">
-      <h3>إعدادات الفيزياء والجذع</h3>
       
-      <div class="control-group">
-        <label>تأثير الذراع على الجذع: <span id="torsoVal">25%</span></label>
-        <input type="range" id="torsoWeight" min="0" max="0.6" step="0.05" value="0.25">
+      <!-- Section 1: Character Customization -->
+      <div class="panel-section">
+        <h3>🎨 تخصيص أجزاء الشخصية</h3>
+        
+        <div class="control-group">
+          <label>شكل الرأس:</label>
+          <select id="headShape">
+            <option value="circle">دائري كلاسيكي</option>
+            <option value="square">مربع منحني</option>
+            <option value="cat">أذنان لطيفان</option>
+            <option value="robot">روبوت مستقبل</option>
+          </select>
+        </div>
+
+        <div class="control-group">
+          <label>تعبير العيون:</label>
+          <select id="eyeStyle">
+            <option value="happy">سعيد (^ ^)</option>
+            <option value="normal">عادي (• •)</option>
+            <option value="surprised">متفاجئ (⊙ ⊙)</option>
+            <option value="blink">مغمض (- -)</option>
+          </select>
+        </div>
+
+        <div class="control-group">
+          <label>نمط الذراع والجذع:</label>
+          <select id="armStyle">
+            <option value="smooth">أنبوبي ناعم</option>
+            <option value="segmented">مفاصل مستقبلي</option>
+            <option value="stick">ستيك مان رفيع</option>
+          </select>
+        </div>
+
+        <div class="control-group dual">
+          <div>
+            <label>لون الشخصية:</label>
+            <input type="color" id="primaryColor" value="#38bdf8">
+          </div>
+          <div>
+            <label>لون المفصل:</label>
+            <input type="color" id="jointColor" value="#22c55e">
+          </div>
+        </div>
       </div>
 
-      <div class="control-group">
-        <label>مرونة الحركة (Spring Dynamics): <span id="springVal">12</span></label>
-        <input type="range" id="springStiffness" min="5" max="25" step="1" value="12">
+      <!-- Section 2: Physics -->
+      <div class="panel-section">
+        <h3>⚡ فيزياء الحركة</h3>
+        <div class="control-group">
+          <label>انحناء الجذع مع الذراع: <span id="torsoVal">25%</span></label>
+          <input type="range" id="torsoWeight" min="0" max="0.6" step="0.05" value="0.25">
+        </div>
+        <div class="control-group">
+          <label>مرونة الحركة: <span id="springVal">12</span></label>
+          <input type="range" id="springStiffness" min="5" max="25" step="1" value="12">
+        </div>
       </div>
 
-      <hr style="border-color: #334155;">
+      <!-- Section 3: Video Recording for YouTube -->
+      <div class="panel-section">
+        <h3>🎥 تصوير الفيديو لليوتيوب</h3>
+        <div class="btn-group">
+          <button class="btn btn-record" id="startRecBtn">⏺️ بدء تسجيل الفيديو</button>
+          <button class="btn btn-stop" id="stopRecBtn" disabled>⏹️ إيقاف وتحميل الفيديو</button>
+        </div>
+      </div>
 
-      <button class="btn" id="addFrameBtn">
-        ➕ إضافة مشهد للمصغرات
-      </button>
+      <!-- Section 4: Timeline Controls -->
+      <div class="panel-section">
+        <button class="btn" id="addFrameBtn">➕ إضافة مشهد للمصغرات</button>
+        <button class="btn btn-secondary" id="playSeqBtn">▶️ تشغيل العرض التتابعي</button>
+        <button class="btn btn-danger" id="resetBtn">🔄 إعادة ضبط</button>
+      </div>
 
-      <button class="btn btn-secondary" id="playSeqBtn">
-        ▶️ تشغيل العرض بالتتابع
-      </button>
+    </div>
 
-      <button class="btn btn-secondary" id="resetBtn" style="margin-top: auto; background: #991b1b;">
-        🔄 إعادة ضبط
-      </button>
+    <!-- Canvas Area -->
+    <div class="viewport">
+      <div class="hint">حرك المقبض الأخضر بالسحب | التعديلات على الشخصية تظهر فوراً</div>
+      <canvas id="mainCanvas"></canvas>
     </div>
 
   </div>
@@ -290,376 +111,9 @@
       <span>شريط المشاهد المصغرة (Storyboard Keyframes)</span>
       <span id="frameCount">عدد المشاهد: 0</span>
     </div>
-    <div class="thumbnails-strip" id="thumbStrip">
-      <!-- Thumbnails will be generated here -->
-    </div>
+    <div class="thumbnails-strip" id="thumbStrip"></div>
   </div>
 
-  <script>
-    const canvas = document.getElementById('mainCanvas');
-    const ctx = canvas.getContext('2d');
-    const thumbStrip = document.getElementById('thumbStrip');
-    const frameCountLabel = document.getElementById('frameCount');
-
-    // Resize Canvas dynamically
-    function resizeCanvas() {
-      canvas.width = canvas.parentElement.clientWidth;
-      canvas.height = canvas.parentElement.clientHeight;
-    }
-    window.addEventListener('resize', resizeCanvas);
-    resizeCanvas();
-
-    // Rig Parameters (Lengths of bones)
-    const upperArmLength = 110;
-    const forearmLength = 95;
-    
-    // Skeleton Anchor Position (Base of Spine)
-    const spineBase = { x: 0, y: 120 };
-
-    // Interactive Target (Hand Goal)
-    let target = { x: 120, y: -20 };
-    let isDragging = false;
-
-    // Dynamic Physics & State
-    let torsoAngle = 0;
-    let targetTorsoAngle = 0;
-    let torsoInfluence = 0.25;
-    let springStiffness = 0.12;
-
-    // Keyframes Storage
-    let keyframes = [];
-    let isPlayingSequence = false;
-
-    // Motion Trail storage
-    let motionHistory = [];
-
-    // --- Math Helpers ---
-    function distance(p1, p2) {
-      return Math.hypot(p2.x - p1.x, p2.y - p1.y);
-    }
-
-    function lerp(start, end, amt) {
-      return (1 - amt) * start + amt * end;
-    }
-
-    // --- Inverse Kinematics (IK 2-Bone Engine) ---
-    function solveIK(shoulder, target, l1, l2) {
-      const dx = target.x - shoulder.x;
-      const dy = target.y - shoulder.y;
-      let dist = Math.hypot(dx, dy);
-
-      // Clamp distance to avoid stretching breaks
-      const maxDist = l1 + l2 - 0.01;
-      if (dist > maxDist) dist = maxDist;
-      if (dist < 10) dist = 10;
-
-      // Law of Cosines
-      const cosElbow = (dist * dist - l1 * l1 - l2 * l2) / (2 * l1 * l2);
-      const elbowAngle = Math.acos(Math.max(-1, Math.min(1, cosElbow)));
-
-      const angleToTarget = Math.atan2(dy, dx);
-      const cosShoulder = (l1 * l1 + dist * dist - l2 * l2) / (2 * l1 * dist);
-      const shoulderAngleOffset = Math.acos(Math.max(-1, Math.min(1, cosShoulder)));
-
-      // Primary bend direction
-      const shoulderAngle = angleToTarget - shoulderAngleOffset;
-
-      const elbow = {
-        x: shoulder.x + Math.cos(shoulderAngle) * l1,
-        y: shoulder.y + Math.sin(shoulderAngle) * l1
-      };
-
-      const wrist = {
-        x: elbow.x + Math.cos(shoulderAngle + elbowAngle) * l2,
-        y: elbow.y + Math.sin(shoulderAngle + elbowAngle) * l2
-      };
-
-      return { shoulder, elbow, wrist };
-    }
-
-    // --- Main Rendering Loop ---
-    let time = 0;
-    function animate() {
-      time += 0.04;
-      const centerX = canvas.width / 2;
-      const centerY = canvas.height / 2 + 50;
-
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-      // 1. Idle Breathing Effect
-      const idleY = Math.sin(time * 2) * 3;
-      const currentSpineBase = { x: centerX + spineBase.x, y: centerY + spineBase.y + idleY };
-
-      // 2. Torso Procedural Balance Logic
-      // Calculate angle from spine to target
-      const dx = (target.x + centerX) - currentSpineBase.x;
-      const dy = (target.y + centerY) - currentSpineBase.y;
-      const targetDist = Math.hypot(dx, dy);
-
-      // Torso leans towards target based on distance and direction
-      targetTorsoAngle = Math.atan2(dy, dx) * torsoInfluence * (targetDist / 250);
-      torsoAngle = lerp(torsoAngle, targetTorsoAngle, springStiffness);
-
-      // 3. Compute Shoulder Position based on Torso Lean
-      const torsoLength = 100;
-      const shoulder = {
-        x: currentSpineBase.x + Math.sin(torsoAngle) * torsoLength,
-        y: currentSpineBase.y - Math.cos(torsoAngle) * torsoLength
-      };
-
-      // 4. Solve Arm IK
-      const worldTarget = { x: centerX + target.x, y: centerY + target.y };
-      const pose = solveIK(shoulder, worldTarget, upperArmLength, forearmLength);
-
-      // Motion Trail
-      motionHistory.push({ ...pose.wrist });
-      if (motionHistory.length > 15) motionHistory.shift();
-
-      // --- DRAWING ---
-      drawGrid();
-      drawMotionTrail();
-      drawSkeleton(currentSpineBase, shoulder, pose);
-      drawTarget(worldTarget);
-
-      requestAnimationFrame(animate);
-    }
-
-    // --- Drawing Utilities ---
-    function drawGrid() {
-      ctx.strokeStyle = '#1e293b';
-      ctx.lineWidth = 1;
-      for (let x = 0; x < canvas.width; x += 40) {
-        ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, canvas.height); ctx.stroke();
-      }
-      for (let y = 0; y < canvas.height; y += 40) {
-        ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(canvas.width, y); ctx.stroke();
-      }
-    }
-
-    function drawMotionTrail() {
-      for (let i = 0; i < motionHistory.length - 1; i++) {
-        const p1 = motionHistory[i];
-        const p2 = motionHistory[i + 1];
-        const alpha = (i / motionHistory.length) * 0.4;
-        ctx.strokeStyle = `rgba(56, 189, 248, ${alpha})`;
-        ctx.lineWidth = i * 0.8;
-        ctx.beginPath();
-        ctx.moveTo(p1.x, p1.y);
-        ctx.lineTo(p2.x, p2.y);
-        ctx.stroke();
-      }
-    }
-
-    function drawSkeleton(base, shoulder, pose) {
-      ctx.lineCap = 'round';
-      ctx.lineJoin = 'round';
-
-      // Torso / Spine Line
-      ctx.strokeStyle = '#f8fafc';
-      ctx.lineWidth = 14;
-      ctx.beginPath();
-      ctx.moveTo(base.x, base.y);
-      ctx.lineTo(shoulder.x, shoulder.y);
-      ctx.stroke();
-
-      // Head
-      const headPos = {
-        x: shoulder.x + Math.sin(torsoAngle * 0.5) * 35,
-        y: shoulder.y - Math.cos(torsoAngle * 0.5) * 35 - 15
-      };
-      ctx.fillStyle = '#38bdf8';
-      ctx.beginPath();
-      ctx.arc(headPos.x, headPos.y, 22, 0, Math.PI * 2);
-      ctx.fill();
-
-      // Upper Arm
-      ctx.strokeStyle = '#38bdf8';
-      ctx.lineWidth = 10;
-      ctx.beginPath();
-      ctx.moveTo(shoulder.x, shoulder.y);
-      ctx.lineTo(pose.elbow.x, pose.elbow.y);
-      ctx.stroke();
-
-      // Forearm
-      ctx.strokeStyle = '#0284c7';
-      ctx.lineWidth = 8;
-      ctx.beginPath();
-      ctx.moveTo(pose.elbow.x, pose.elbow.y);
-      ctx.lineTo(pose.wrist.x, pose.wrist.y);
-      ctx.stroke();
-
-      // Joints / Pivots
-      const joints = [base, shoulder, pose.elbow, pose.wrist];
-      joints.forEach((j, index) => {
-        ctx.fillStyle = index === 3 ? '#22c55e' : '#ffffff';
-        ctx.beginPath();
-        ctx.arc(j.x, j.y, index === 3 ? 7 : 5, 0, Math.PI * 2);
-        ctx.fill();
-      });
-    }
-
-    function drawTarget(worldTarget) {
-      ctx.strokeStyle = isDragging ? '#4ade80' : '#22c55e';
-      ctx.lineWidth = 2;
-      ctx.fillStyle = 'rgba(34, 197, 94, 0.2)';
-      ctx.beginPath();
-      ctx.arc(worldTarget.x, worldTarget.y, 14, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.stroke();
-
-      // Inner Crosshair
-      ctx.beginPath();
-      ctx.moveTo(worldTarget.x - 6, worldTarget.y); ctx.lineTo(worldTarget.x + 6, worldTarget.y);
-      ctx.moveTo(worldTarget.x, worldTarget.y - 6); ctx.lineTo(worldTarget.x, worldTarget.y + 6);
-      ctx.stroke();
-    }
-
-    // --- Mouse Drag Interaction ---
-    function getMousePos(e) {
-      const rect = canvas.getBoundingClientRect();
-      const centerX = canvas.width / 2;
-      const centerY = canvas.height / 2 + 50;
-      return {
-        x: e.clientX - rect.left - centerX,
-        y: e.clientY - rect.top - centerY
-      };
-    }
-
-    canvas.addEventListener('mousedown', (e) => {
-      const m = getMousePos(e);
-      if (distance(m, target) < 25) {
-        isDragging = true;
-      }
-    });
-
-    window.addEventListener('mousemove', (e) => {
-      if (isDragging) {
-        const m = getMousePos(e);
-        target.x = m.x;
-        target.y = m.y;
-      }
-    });
-
-    window.addEventListener('mouseup', () => isDragging = false);
-
-    // --- Storyboard / Thumbnails System ---
-    const addFrameBtn = document.getElementById('addFrameBtn');
-    
-    addFrameBtn.addEventListener('click', () => {
-      // 1. Save frame state
-      const frameData = { ...target };
-      keyframes.push(frameData);
-
-      // 2. Render Offscreen Snapshot Thumbnail
-      const thumbCanvas = document.createElement('canvas');
-      thumbCanvas.width = 120;
-      thumbCanvas.height = 90;
-      const tCtx = thumbCanvas.getContext('2d');
-
-      // Draw Mini Scene inside Thumbnail
-      tCtx.fillStyle = '#0f172a';
-      tCtx.fillRect(0, 0, 120, 90);
-      
-      // Draw simplified skeleton in thumb
-      const tCenterX = 60;
-      const tCenterY = 70;
-      const miniTarget = { x: tCenterX + frameData.x * 0.25, y: tCenterY + frameData.y * 0.25 };
-      const miniShoulder = { x: tCenterX, y: tCenterY - 30 };
-      const miniPose = solveIK(miniShoulder, miniTarget, 25, 20);
-
-      tCtx.strokeStyle = '#38bdf8';
-      tCtx.lineWidth = 3;
-      tCtx.beginPath();
-      tCtx.moveTo(miniShoulder.x, miniShoulder.y);
-      tCtx.lineTo(miniPose.elbow.x, miniPose.elbow.y);
-      tCtx.lineTo(miniPose.wrist.x, miniPose.wrist.y);
-      tCtx.stroke();
-
-      tCtx.fillStyle = '#22c55e';
-      tCtx.beginPath();
-      tCtx.arc(miniTarget.x, miniTarget.y, 3, 0, Math.PI*2);
-      tCtx.fill();
-
-      // 3. Create UI Element for Thumbnail Strip
-      const card = document.createElement('div');
-      card.className = 'thumb-card';
-      const index = keyframes.length;
-      card.innerHTML = `<span class="thumb-number">فريم ${index}</span>`;
-      card.appendChild(thumbCanvas);
-
-      // Click thumbnail to smooth jump to pose
-      card.addEventListener('click', () => {
-        document.querySelectorAll('.thumb-card').forEach(c => c.classList.remove('active'));
-        card.classList.add('active');
-        smoothMoveToTarget(frameData);
-      });
-
-      thumbStrip.appendChild(card);
-      frameCountLabel.innerText = `عدد المشاهد: ${keyframes.length}`;
-    });
-
-    // Smooth Motion Transition to target
-    function smoothMoveToTarget(goal) {
-      const startX = target.x;
-      const startY = target.y;
-      let progress = 0;
-
-      function step() {
-        progress += 0.08;
-        target.x = lerp(startX, goal.x, progress);
-        target.y = lerp(startY, goal.y, progress);
-
-        if (progress < 1) {
-          requestAnimationFrame(step);
-        }
-      }
-      step();
-    }
-
-    // --- Sequence Auto Playback ---
-    document.getElementById('playSeqBtn').addEventListener('click', () => {
-      if (keyframes.length < 2) {
-        alert('قم بإضافة مشهدين على الأقل لتشغيل التتابع!');
-        return;
-      }
-
-      let frameIdx = 0;
-      function playNext() {
-        if (frameIdx >= keyframes.length) return;
-        
-        // Highlight active thumb
-        const cards = document.querySelectorAll('.thumb-card');
-        cards.forEach(c => c.classList.remove('active'));
-        if (cards[frameIdx]) cards[frameIdx].classList.add('active');
-
-        smoothMoveToTarget(keyframes[frameIdx]);
-        frameIdx++;
-
-        setTimeout(playNext, 1200); // 1.2s delay between keyframes
-      }
-      playNext();
-    });
-
-    // Controls listeners
-    document.getElementById('torsoWeight').addEventListener('input', (e) => {
-      torsoInfluence = parseFloat(e.target.value);
-      document.getElementById('torsoVal').innerText = Math.round(torsoInfluence * 100) + '%';
-    });
-
-    document.getElementById('springStiffness').addEventListener('input', (e) => {
-      springStiffness = parseFloat(e.target.value) / 100;
-      document.getElementById('springVal').innerText = e.target.value;
-    });
-
-    document.getElementById('resetBtn').addEventListener('click', () => {
-      keyframes = [];
-      thumbStrip.innerHTML = '';
-      frameCountLabel.innerText = 'عدد المشاهد: 0';
-      target = { x: 120, y: -20 };
-    });
-
-    // Start engine
-    animate();
-  </script>
+  <script src="script.js"></script>
 </body>
 </html>
