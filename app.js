@@ -27,7 +27,7 @@ const ctx = mainCanvas.getContext('2d');
 const thumbStrip = document.getElementById('thumbStrip');
 const frameCountLabel = document.getElementById('frameCount');
 
-// Safe Custom Rounded Rectangle implementation for cross-browser support
+// Safe Custom Rounded Rectangle implementation
 function drawRoundRect(targetCtx, x, y, width, height, radius) {
   targetCtx.beginPath();
   targetCtx.moveTo(x + radius, y);
@@ -42,42 +42,37 @@ function drawRoundRect(targetCtx, x, y, width, height, radius) {
   targetCtx.closePath();
 }
 
+// دالة حساب الأبعاد الآمنة
 function resizeCanvases() {
-  const bParent = builderCanvas.parentElement;
-  if (bParent && bParent.clientWidth > 0) {
-    builderCanvas.width = bParent.clientWidth;
-    builderCanvas.height = bParent.clientHeight;
-  } else {
-    builderCanvas.width = window.innerWidth - 320;
-    builderCanvas.height = window.innerHeight - 60;
+  // حساب شاشة التصميم
+  const bRect = builderCanvas.parentElement.getBoundingClientRect();
+  if (bRect && bRect.width > 0) {
+    builderCanvas.width = bRect.width;
+    builderCanvas.height = bRect.height;
   }
 
-  const mParent = mainCanvas.parentElement;
-  if (mParent && mParent.clientWidth > 0) {
-    mainCanvas.width = mParent.clientWidth;
-    mainCanvas.height = mParent.clientHeight;
-  } else {
-    mainCanvas.width = window.innerWidth - 320;
-    mainCanvas.height = window.innerHeight - 185;
+  // حساب شاشة التحريك
+  const mRect = mainCanvas.parentElement.getBoundingClientRect();
+  if (mRect && mRect.width > 0) {
+    mainCanvas.width = mRect.width;
+    mainCanvas.height = mRect.height;
   }
 }
 
 window.addEventListener('resize', () => {
   resizeCanvases();
-  drawBuilderPreview();
 });
 
-// Switch Screen Handlers
+// Switch Screen Handlers (مع تأخير زمني بسيط للسماح للمتصفح بالرسم)
 goToAnimBtn.addEventListener('click', () => {
   builderScreen.classList.remove('active');
   animatorScreen.classList.add('active');
   step1Indicator.classList.remove('active');
   step2Indicator.classList.add('active');
 
-  // Request Animation Frame ensures layout reflow happens before measuring
-  requestAnimationFrame(() => {
+  setTimeout(() => {
     resizeCanvases();
-  });
+  }, 50);
 });
 
 backToBuilderBtn.addEventListener('click', () => {
@@ -86,19 +81,18 @@ backToBuilderBtn.addEventListener('click', () => {
   step2Indicator.classList.remove('active');
   step1Indicator.classList.add('active');
 
-  requestAnimationFrame(() => {
+  setTimeout(() => {
     resizeCanvases();
-    drawBuilderPreview();
-  });
+  }, 50);
 });
 
 // Customization Event Listeners
-document.getElementById('headShape').addEventListener('change', (e) => { characterState.headShape = e.target.value; drawBuilderPreview(); });
-document.getElementById('eyeStyle').addEventListener('change', (e) => { characterState.eyeStyle = e.target.value; drawBuilderPreview(); });
-document.getElementById('armStyle').addEventListener('change', (e) => { characterState.armStyle = e.target.value; drawBuilderPreview(); });
-document.getElementById('legStyle').addEventListener('change', (e) => { characterState.legStyle = e.target.value; drawBuilderPreview(); });
-document.getElementById('primaryColor').addEventListener('input', (e) => { characterState.primaryColor = e.target.value; drawBuilderPreview(); });
-document.getElementById('jointColor').addEventListener('input', (e) => { characterState.jointColor = e.target.value; drawBuilderPreview(); });
+document.getElementById('headShape').addEventListener('change', (e) => { characterState.headShape = e.target.value; });
+document.getElementById('eyeStyle').addEventListener('change', (e) => { characterState.eyeStyle = e.target.value; });
+document.getElementById('armStyle').addEventListener('change', (e) => { characterState.armStyle = e.target.value; });
+document.getElementById('legStyle').addEventListener('change', (e) => { characterState.legStyle = e.target.value; });
+document.getElementById('primaryColor').addEventListener('input', (e) => { characterState.primaryColor = e.target.value; });
+document.getElementById('jointColor').addEventListener('input', (e) => { characterState.jointColor = e.target.value; });
 
 // Shared Skeleton Rendering Engine
 function drawCharacterParts(targetCtx, base, shoulder, pose, torsoAngleVal) {
@@ -112,12 +106,9 @@ function drawCharacterParts(targetCtx, base, shoulder, pose, torsoAngleVal) {
   const leftFoot = { x: base.x - 25, y: base.y + 70 };
   const rightFoot = { x: base.x + 25, y: base.y + 70 };
 
-  // Left Leg
   targetCtx.beginPath(); targetCtx.moveTo(base.x - 8, base.y); targetCtx.lineTo(leftFoot.x, leftFoot.y); targetCtx.stroke();
-  // Right Leg
   targetCtx.beginPath(); targetCtx.moveTo(base.x + 8, base.y); targetCtx.lineTo(rightFoot.x, rightFoot.y); targetCtx.stroke();
 
-  // Shoes / Boots
   if (characterState.legStyle === 'standard') {
     targetCtx.fillStyle = characterState.jointColor;
     targetCtx.beginPath(); targetCtx.arc(leftFoot.x - 4, leftFoot.y, 6, 0, Math.PI * 2); targetCtx.fill();
@@ -155,6 +146,7 @@ function drawCharacterParts(targetCtx, base, shoulder, pose, torsoAngleVal) {
     targetCtx.fill(); targetCtx.stroke();
   } else if (characterState.headShape === 'robot') {
     targetCtx.beginPath(); targetCtx.rect(headPos.x - 22, headPos.y - 18, 44, 36); targetCtx.fill(); targetCtx.stroke();
+    targetCtx.fillStyle = '#0f172a';
     targetCtx.fillRect(headPos.x - 4, headPos.y - 26, 8, 8);
   }
 
@@ -192,7 +184,7 @@ function drawCharacterParts(targetCtx, base, shoulder, pose, torsoAngleVal) {
   });
 }
 
-// Draw Builder Preview (Static T-Pose / Relaxed)
+// دالة رسم المعاينة 
 function drawBuilderPreview() {
   if (!builderCanvas.width || builderCanvas.width === 0) return;
   bCtx.clearRect(0, 0, builderCanvas.width, builderCanvas.height);
@@ -210,7 +202,7 @@ function drawBuilderPreview() {
   drawCharacterParts(bCtx, base, shoulder, pose, 0);
 }
 
-// IK Solver Engine for Animation Workspace
+// محرك الحركة الذكية (IK Solver)
 const upperArmLength = 100;
 const forearmLength = 85;
 const spineBase = { x: 0, y: 80 };
@@ -250,42 +242,43 @@ function solveIK(shoulder, target, l1, l2) {
   };
 }
 
-// Animation Workspace Loop
+// حلقة التحريك الرئيسية
 function animate() {
   time += 0.04;
 
   if (builderScreen.classList.contains('active')) {
     drawBuilderPreview();
   } else if (animatorScreen.classList.contains('active')) {
-    const centerX = mainCanvas.width / 2;
-    const centerY = mainCanvas.height / 2 + 20;
+    // شرط حماية يمنع العمل إذا كانت الأبعاد صفر
+    if (mainCanvas.width && mainCanvas.width > 0) {
+      const centerX = mainCanvas.width / 2;
+      const centerY = mainCanvas.height / 2 + 20;
 
-    ctx.clearRect(0, 0, mainCanvas.width, mainCanvas.height);
+      ctx.clearRect(0, 0, mainCanvas.width, mainCanvas.height);
 
-    const idleY = Math.sin(time * 2) * 3;
-    const currentSpineBase = { x: centerX + spineBase.x, y: centerY + spineBase.y + idleY };
+      const idleY = Math.sin(time * 2) * 3;
+      const currentSpineBase = { x: centerX + spineBase.x, y: centerY + spineBase.y + idleY };
 
-    // Torso IK Balance
-    const dx = (target.x + centerX) - currentSpineBase.x;
-    const dy = (target.y + centerY) - currentSpineBase.y;
-    const targetDist = Math.hypot(dx, dy);
+      const dx = (target.x + centerX) - currentSpineBase.x;
+      const dy = (target.y + centerY) - currentSpineBase.y;
+      const targetDist = Math.hypot(dx, dy);
 
-    targetTorsoAngle = Math.atan2(dy, dx) * torsoInfluence * (targetDist / 250);
-    torsoAngle += (targetTorsoAngle - torsoAngle) * springStiffness;
+      targetTorsoAngle = Math.atan2(dy, dx) * torsoInfluence * (targetDist / 250);
+      torsoAngle += (targetTorsoAngle - torsoAngle) * springStiffness;
 
-    const torsoLength = 90;
-    const shoulder = {
-      x: currentSpineBase.x + Math.sin(torsoAngle) * torsoLength,
-      y: currentSpineBase.y - Math.cos(torsoAngle) * torsoLength
-    };
+      const torsoLength = 90;
+      const shoulder = {
+        x: currentSpineBase.x + Math.sin(torsoAngle) * torsoLength,
+        y: currentSpineBase.y - Math.cos(torsoAngle) * torsoLength
+      };
 
-    const worldTarget = { x: centerX + target.x, y: centerY + target.y };
-    const pose = solveIK(shoulder, worldTarget, upperArmLength, forearmLength);
+      const worldTarget = { x: centerX + target.x, y: centerY + target.y };
+      const pose = solveIK(shoulder, worldTarget, upperArmLength, forearmLength);
 
-    // Grid & Character
-    drawGrid(ctx, mainCanvas);
-    drawCharacterParts(ctx, currentSpineBase, shoulder, pose, torsoAngle);
-    drawTargetHandle(ctx, worldTarget);
+      drawGrid(ctx, mainCanvas);
+      drawCharacterParts(ctx, currentSpineBase, shoulder, pose, torsoAngle);
+      drawTargetHandle(ctx, worldTarget);
+    }
   }
 
   requestAnimationFrame(animate);
@@ -309,7 +302,7 @@ function drawTargetHandle(targetCtx, worldTarget) {
   targetCtx.beginPath(); targetCtx.arc(worldTarget.x, worldTarget.y, 14, 0, Math.PI * 2); targetCtx.fill(); targetCtx.stroke();
 }
 
-// Drag Interaction
+// التفاعل والسحب
 function getMousePos(e) {
   const rect = mainCanvas.getBoundingClientRect();
   return {
@@ -332,7 +325,7 @@ window.addEventListener('mousemove', (e) => {
 });
 window.addEventListener('mouseup', () => isDragging = false);
 
-// Physics Controls
+// إعدادات الفيزياء
 document.getElementById('torsoWeight').addEventListener('input', (e) => {
   torsoInfluence = parseFloat(e.target.value);
   document.getElementById('torsoVal').innerText = Math.round(torsoInfluence * 100) + '%';
@@ -343,7 +336,7 @@ document.getElementById('springStiffness').addEventListener('input', (e) => {
   document.getElementById('springVal').innerText = e.target.value;
 });
 
-// Canvas Video Recording Setup
+// مسجل الفيديو
 let mediaRecorder;
 let recordedChunks = [];
 const startRecBtn = document.getElementById('startRecBtn');
@@ -383,7 +376,7 @@ stopRecBtn.addEventListener('click', () => {
   }
 });
 
-// Keyframe Timeline Engine
+// شريط المشاهد
 document.getElementById('addFrameBtn').addEventListener('click', () => {
   const frameData = { ...target };
   keyframes.push(frameData);
@@ -451,8 +444,10 @@ document.getElementById('resetBtn').addEventListener('click', () => {
   target = { x: 100, y: -20 };
 });
 
-// Safe Startup Sequence
+// بدء التشغيل الآمن (الحل السحري لمشكلة التحميل الأولي)
 window.addEventListener('load', () => {
-  resizeCanvases();
-  animate();
+  setTimeout(() => {
+    resizeCanvases();
+    requestAnimationFrame(animate);
+  }, 50); // إعطاء المتصفح 50 جزء من الثانية لترتيب ملفات CSS قبل الحساب
 });
