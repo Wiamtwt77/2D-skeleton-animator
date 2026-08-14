@@ -3,56 +3,50 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>محرك الشخصيات الكرتونية</title>
+    <title>Nova 2D Animation Studio</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div class="app">
-        <header>
-            <h1>🎨 محرك الشخصيات الكرتونية</h1>
-            <p>اختر شخصيتك وحرك العظام كما تريد</p>
-        </header>
 
-        <main>
-            <aside class="characters-panel">
-                <h2>👤 اختر الشخصية</h2>
-                <div class="character-list">
-                    <button class="char-btn active" data-char="human">
-                        <span class="char-icon">🧍</span>
-                        <span>الإنسان</span>
-                    </button>
-                    <button class="char-btn" data-char="robot">
-                        <span class="char-icon">🤖</span>
-                        <span>الروبوت</span>
-                    </button>
-                    <button class="char-btn" data-char="cat">
-                        <span class="char-icon">🐱</span>
-                        <span>القط</span>
-                    </button>
-                </div>
-            </aside>
+    <header class="toolbar">
+        <div class="logo">✨ NOVA STUDIO</div>
+        <div class="controls-group">
+            <label>الشخصية:</label>
+            <select id="charSelect" onchange="changeCharacter(this.value)">
+                <option value="nova">نوفا (Nova)</option>
+                <option value="cyber">سايبر بوي (Cyber)</option>
+            </select>
+            
+            <label>التعبير:</label>
+            <select id="exprSelect" onchange="changeExpression(this.value)">
+                <option value="normal">عادي</option>
+                <option value="happy">سعيد 🤩</option>
+                <option value="angry">غاضب 😠</option>
+                <option value="shocked">منصدم 😲</option>
+            </select>
+        </div>
+        <div class="export-group">
+            <button onclick="saveProject()">💾 تصدير المشروع (JSON)</button>
+            <button onclick="loadProjectPrompt()">📂 استيراد مشروع</button>
+        </div>
+    </header>
 
-            <section class="stage">
-                <div class="canvas-container">
-                    <svg id="stage-svg" viewBox="0 0 400 500" xmlns="http://www.w3.org/2000/svg">
-                        <!-- الشخصية ستُحقن هنا بالJavaScript -->
-                    </svg>
-                </div>
-            </section>
+    <main class="workspace">
+        <canvas id="animCanvas" width="800" height="550"></canvas>
+    </main>
 
-            <aside class="bones-panel">
-                <h2>🦴 لوحة التحكم</h2>
-                <div id="bones-controls">
-                    <!-- عناصر التحكم ستُولد ديناميكياً -->
-                </div>
-                <div class="actions">
-                    <button id="reset-pose">↺ إعادة الوضعية</button>
-                    <button id="random-pose">🎲 وضعية عشوائية</button>
-                </div>
-            </aside>
-        </main>
-    </div>
+    <footer class="timeline-panel">
+        <div class="timeline-controls">
+            <button onclick="saveKeyframe()">📸 إضافة مشهد (Keyframe)</button>
+            <button onclick="playAnimation()">▶️ تشغيل الأنيميشن</button>
+            <button onclick="clearKeyframes()">🗑️ مسح المشاهد</button>
+            <span id="frameCounter">المشاهد المحفوظة: 0</span>
+        </div>
+        <div class="timeline-track" id="timelineTrack">
+            <!-- شريط الفريمات المرئي -->
+        </div>
+    </footer>
 
-    <script src="script.js"></script>
+    <script src="app.js"></script>
 </body>
 </html>
