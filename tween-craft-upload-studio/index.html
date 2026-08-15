@@ -1,1 +1,48 @@
 
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Custom Uploads Animation Studio</title>
+    <link rel="stylesheet" href="src/style.css">
+</head>
+<body>
+
+    <header class="toolbar">
+        <div class="logo">🦴 TWENCRAFT CUSTOM STUDIO</div>
+        <div class="toolbar-group">
+            <label style="font-size:12px;">التسهيل:</label>
+            <select id="easingSelect">
+                <option value="easeInOut">Ease In-Out (سلس)</option>
+                <option value="linear">Linear (خطي)</option>
+            </select>
+            <button id="onionBtn" onclick="toggleOnionSkin()">🧅 قشر البصل: معطل</button>
+            <button onclick="resetPose()">🧍 إعادة تعيين</button>
+        </div>
+    </header>
+
+    <div class="main-layout">
+        <aside class="sidebar" id="sidebar"></aside>
+        <main class="workspace">
+            <canvas id="canvas" width="850" height="520"></canvas>
+        </main>
+    </div>
+
+    <footer class="timeline">
+        <div class="timeline-top">
+            <button onclick="saveKeyframe()">📸 إضافة فريم</button>
+            <button id="playBtn" onclick="togglePlay()">▶️ تشغيل</button>
+            <button onclick="clearFrames()">🗑️ مسح الكل</button>
+            <div class="scrub-area">
+                <span style="font-size:11px;">الزمن:</span>
+                <input type="range" id="scrubBar" min="0" max="100" value="0" oninput="scrubTimeline(this.value)">
+            </div>
+            <span id="frameCount" style="font-size: 11px; color: var(--text-secondary);">الفريمات: 0</span>
+        </div>
+        <div class="frames-track" id="framesTrack"></div>
+    </footer>
+
+    <script type="module" src="src/main.js"></script>
+</body>
+</html>
