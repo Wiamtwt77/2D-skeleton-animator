@@ -1,1 +1,12 @@
 
+{
+  "name": "twencraft-upload-studio",
+  "version": "1.0.0",
+  "description": "Custom image upload 12-bone animation studio",
+  "main": "src/main.js",
+  "scripts": {
+    "start": "npx vite"
+  },
+  "author": "ايفا",
+  "license": "MIT"
+}
