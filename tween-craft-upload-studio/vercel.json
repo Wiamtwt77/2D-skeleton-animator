@@ -1,7 +1,7 @@
-{
-  "buildCommand": "npm run build",
-  "outputDirectory": "dist",
-  "rewrites": [
-    { "source": "/(.*)", "destination": "/index.html" }
-  ]
+"scripts": {
+  "start": "vite",
+  "build": "vite build"
+},
+"devDependencies": {
+  "vite": "^5.0.0"
 }
