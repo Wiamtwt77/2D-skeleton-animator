@@ -13,7 +13,7 @@
   },
   "author": "ايفا",
   "license": "MIT",
-  "devDependencies": {
+  "dependencies": {
     "vite": "^5.0.0"
   }
 }
